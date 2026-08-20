@@ -659,6 +659,41 @@ CREATE TABLE games (
 
 ---
 
+### D016 - Exclude setup-db.ts from Git Due to PII
+
+**Date**: 2026-08-20  
+**Status**: Active
+
+**Summary of Changes**
+Added `scripts/setup-db.ts` to `.gitignore` to prevent seeded player roster data from being committed to GitHub. The setup script contains hardcoded player names (e.g., "Paddy Doonan-Riley", "Ari Ingolfsson") which are PII.
+
+**Rationale**
+
+- MVP launched with seeded roster for quick testing/demo
+- Seeded player names are real individuals (children under 9)
+- GDPR compliance: prevents personal data from being pushed to public/private repo
+- Developers can still run `npm run setup:db` locally after cloning (idempotent)
+- .env files already in .gitignore, so this follows existing secret/data protection pattern
+- Keeps scope clear: repo contains code & schema, not test data
+
+**Minimal Code Example**
+
+```gitignore
+# database setup scripts (contain seeded PII)
+scripts/setup-db.ts
+```
+
+**Feature Domain(s)**
+
+- Infrastructure
+- Privacy
+- Security
+
+**Index Tags**
+`#privacy #pii #gitignore #security #gdpr #seeding`
+
+---
+
 ## Quick Reference Index
 
 ### By Domain
@@ -666,8 +701,9 @@ CREATE TABLE games (
 - **Database**: D002, D004, D006, D009, D010, D011, D012, D013, D014, D015
 - **API**: D003, D006, D009, D012, D013, D015
 - **UI**: D005, D008, D009, D012, D015
-- **Infrastructure**: D001, D002, D004, D011
-- **Privacy**: D007
+- **Infrastructure**: D001, D002, D004, D011, D016
+- **Privacy**: D007, D016
+- **Security**: D016
 - **Architecture**: D006, D010
 - **Player Management**: D005, D007, D009, D011, D012, D013, D014
 - **Data Validation**: D012
@@ -689,4 +725,4 @@ CREATE TABLE games (
 
 ### Active Decisions
 
-`#active`: D001, D002, D003, D004, D005, D006, D007, D008, D009, D010, D011, D012, D013, D014, D015
+`#active`: D001, D002, D003, D004, D005, D006, D007, D008, D009, D010, D011, D012, D013, D014, D015, D016
