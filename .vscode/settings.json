@@ -9,5 +9,10 @@
     "**/app/**/template.tsx": "${dirname(1)}/${dirname} - template.tsx",
     "**/app/**/default.tsx": "${dirname(1)}/${dirname} - default.tsx",
     "**/app/**/route.ts": "${dirname(1)}/${dirname} - route.ts"
+  },
+  "copilot.excludeFiles": {
+    "**/.env": true,
+    "**/.env.local": true,
+    "**/.env.*.local": true
   }
 }

@@ -28,7 +28,56 @@ Live score tracking app for under-9 boys football (Lions team). Single-tenant MV
 | Runtime  | Node.js (Next.js API routes)              |
 | Env      | .env.local (Next.js)                      |
 
+## Current Development Database
+
+Development and login testing currently use the configured Turso Cloud database through `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` in `.env.local`. The persistent local Turso workflow in `LOCAL_DEVELOPMENT.md` is deferred and should not replace the cloud URL during current testing.
+
+## Architecture Layers (Quick Reference)
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ PRESENTATION (React + Next.js)                          │
+│ - page.tsx (Dashboard with tabs)                        │
+│ - GamesView.tsx, PlayersView.tsx (Domain components)   │
+│ - AuthStatus.tsx (Auth UI)                              │
+└─────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────┐
+│ API LAYER (Next.js App Router)                          │
+│ - /api/auth/login - Custom email/password auth         │
+│ - /api/games/* - Game CRUD + scoring                    │
+│ - /api/players/* - Squad management                     │
+│ - /api/game-types/* - Match type metadata               │
+└─────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────┐
+│ BUSINESS LOGIC (Auth & Domain Services)                 │
+│ - Password hashing: src/lib/password.ts (bcrypt)        │
+│ - DB queries & validation logic                         │
+│ - Role-based access control (admin/user)                │
+└─────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────┐
+│ DATABASE LAYER (Turso/libSQL)                           │
+│ - users (auth)                                           │
+│ - teams, players, games, game_scorers                   │
+│ - game_types, season_stats                              │
+│ - SDK: @libsql/client 0.17.4                            │
+└─────────────────────────────────────────────────────────┘
+```
+
 ## Feature Domains
+
+### 🔐 Authentication & Security
+
+- Better Auth user, account, and session tables with native scrypt password hashing
+- Email/password login (no OAuth, admin-only user creation)
+- Role-based access control: `admin`, `user`
+- Single admin user seeded: `s.j.ingolfsson@gmail.com`
+- MFA-ready architecture (TOTP, Email OTP, Backup Codes)
+- **Routes**: `/api/auth/login`
+- **Utilities**: `src/lib/auth.ts` and Better Auth client/route handler
+- **Status**: ✅ MVP Complete (Better Auth with email/password)
 
 ### 🎮 Game Management
 
@@ -79,40 +128,34 @@ Live score tracking app for under-9 boys football (Lions team). Single-tenant MV
 
 ## Database Schema Index
 
-| Table          | Purpose          | Key Fields                                                               |
-| -------------- | ---------------- | ------------------------------------------------------------------------ |
-| `teams`        | Team identity    | id, team_name                                                            |
-| `players`      | Squad roster     | id, first_name, last_name, jersey_number, **anonymised_id**              |
-| `game_types`   | Match categories | id, type_name, display_name, color, is_default                           |
-| `games`        | Match records    | id, opposition_name, score_for, score_against, match_date, status, venue |
-| `game_scorers` | Goal tracking    | id, game_id, player_id, goal_count                                       |
-| `season_stats` | Aggregated stats | id, season, total_games, total_wins, total_goals_for                     |
+| Table          | Purpose          | Key Fields                                                                 |
+| -------------- | ---------------- | -------------------------------------------------------------------------- |
+| `users`        | Authentication   | id, email (unique), password_hash (bcrypt), role (admin/user), is_active   |
+| `teams`        | Team identity    | id, team_name                                                              |
+| `players`      | Squad roster     | id, name, jersey_number, anonymised_id                                     |
+| `game_types`   | Match categories | id, team_id, type_name, display_name, color, is_default                    |
+| `games`        | Match records    | id, team_id, opposition_name, score_for, score_against, match_date, status |
+| `game_scorers` | Goal tracking    | id, game_id, player_id, goal_count                                         |
+| `season_stats` | Aggregated stats | id, team_id, season, total_games, total_wins, total_goals_for              |
 
 ## Directory Structure
 
 ```
 src/
-├── app/
-│   ├── page.tsx              # Main dashboard (Games/Players tabs)
-│   ├── globals.css
-│   └── api/
-│       ├── team/route.ts
-│       ├── players/route.ts
-│       ├── games/route.ts
-│       ├── games/[gameId]/route.ts
-│       ├── games/[gameId]/scores/route.ts
-│       └── game-types/route.ts
-├── components/
-│   ├── GamesView.tsx         # Game CRUD + live display
-│   ├── PlayersView.tsx       # Squad management
-│   └── Button.tsx            # UI primitives
-├── lib/
-│   └── db.ts                 # Turso client singleton
+├── app/                    # Next.js App Router (pages & API routes)
+│   ├── page.tsx           # Main dashboard
+│   ├── login/             # Auth pages
+│   ├── api/               # API routes (auth, games, players, game-types)
+│   └── globals.css
+├── components/            # React components (GamesView, PlayersView, etc)
+├── lib/                   # Utilities (db, auth, password)
 └── styles/
-    └── globals.css
 
-scripts/
-└── setup-db.ts               # DB initialization + seeding
+scripts/                   # Setup & maintenance scripts
+└── setup-db.ts           # Database initialization & seeding
+
+public/                   # Static assets
+.env.local               # Environment variables (gitignored)
 ```
 
 ## Key Design Patterns
@@ -125,20 +168,24 @@ scripts/
 
 ## Feature Index Tags
 
-| Feature | Tags                               | Status    |
-| ------- | ---------------------------------- | --------- |
-| Games   | `#games #crud #scoring #live`      | ✅ MVP    |
-| Players | `#players #squad #roster`          | ✅ MVP    |
-| Types   | `#game-types #metadata #seeded`    | ✅ MVP    |
-| Scores  | `#scoring #goals #tracking`        | ✅ MVP    |
-| Tenancy | `#single-tenant #lions #hardcoded` | ✅ MVP    |
-| Stats   | `#stats #aggregation #season`      | 🔮 Future |
-| Auth    | `#auth #admin #permissions`        | 🔮 Future |
-| Export  | `#export #pdf #csv`                | 🔮 Future |
+| Feature  | Tags                                        | Status          |
+| -------- | ------------------------------------------- | --------------- |
+| Auth     | `#auth #bcrypt #admin #permissions #secure` | ✅ MVP Complete |
+| Games    | `#games #crud #scoring #live`               | ✅ MVP          |
+| Players  | `#players #squad #roster`                   | ✅ MVP          |
+| Types    | `#game-types #metadata #seeded`             | ✅ MVP          |
+| Scores   | `#scoring #goals #tracking`                 | ✅ MVP          |
+| Tenancy  | `#single-tenant #lions #hardcoded`          | ✅ MVP          |
+| Stats    | `#stats #aggregation #season`               | 🔮 Future       |
+| Export   | `#export #pdf #csv`                         | 🔮 Future       |
+| MFA      | `#mfa #totp #email-otp #backup-codes`       | 🔮 Phase 2      |
+| Sessions | `#sessions #jwt #tokens #persistence`       | 🔮 Phase 2      |
 
 ## Related Documents
 
-- `DECISION_LOG.md` - Architectural decisions (D001-D008)
+- `DECISION_LOG.md` - Architectural decisions (D001-D018)
 - `APP_DOCUMENTATION.md` - Full feature specs & user flows
 - `TURSO_SCHEMA.md` - Database schema details
 - `schema.sql` - Production SQL
+- `PASSWORD_SECURITY_GUIDE.md` - Password security & MFA implementation guide
+- `AUTH_COMPLETE_SETUP.md` - Auth setup summary & next steps
