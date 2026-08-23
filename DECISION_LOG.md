@@ -659,16 +659,473 @@ CREATE TABLE games (
 
 ---
 
+### D016 - Exclude setup-db.ts from Git Due to PII
+
+**Date**: 2026-08-20  
+**Status**: Active
+
+**Summary of Changes**
+Added `scripts/setup-db.ts` to `.gitignore` to prevent seeded player roster data from being committed to GitHub. The setup script contains hardcoded player names (e.g., "Paddy Doonan-Riley", "Ari Ingolfsson") which are PII.
+
+**Rationale**
+
+- MVP launched with seeded roster for quick testing/demo
+- Seeded player names are real individuals (children under 9)
+- GDPR compliance: prevents personal data from being pushed to public/private repo
+- Developers can still run `npm run setup:db` locally after cloning (idempotent)
+- .env files already in .gitignore, so this follows existing secret/data protection pattern
+- Keeps scope clear: repo contains code & schema, not test data
+
+**Minimal Code Example**
+
+```gitignore
+# database setup scripts (contain seeded PII)
+scripts/setup-db.ts
+```
+
+**Feature Domain(s)**
+
+- Infrastructure
+- Privacy
+- Security
+
+**Index Tags**
+`#privacy #pii #gitignore #security #gdpr #seeding`
+
+---
+
+### D017 - Authentication with Better Auth & OAuth (Google, Facebook)
+
+**Date**: 2026-08-20  
+**Status**: Superseded by D018, then D023
+
+**Summary of Changes**
+Implemented authentication using Better Auth with support for:
+
+- Email/password authentication
+- OAuth social providers: Google and Facebook
+- Turso (libSQL) database adapter for session/user management
+- API route handler at `/api/auth/[...all]/route.ts`
+- Client-side auth utilities: `signIn`, `signUp`, `signOut`, `useSession`
+- Public login and signup pages
+- Auth status component in header showing user info and logout button
+
+**Rationale**
+
+- Better Auth: industry-standard, well-maintained, battle-tested
+- Turso adapter: native libSQL support, works seamlessly with existing @libsql/client
+- OAuth providers: reduces friction (users login with existing Google/Facebook accounts)
+- Email/password: fallback for users without OAuth accounts
+- Session/user tables auto-created by Better Auth (separate from Lions domain tables)
+- Single-tenant scope maintained: auth layer orthogonal to game/player data
+- Privacy-friendly: Better Auth handles secrets securely, supports session expiry
+
+**Minimal Code Example**
+
+```typescript
+// src/lib/auth.ts
+import { betterAuth } from "better-auth";
+import { libSqlAdapter } from "better-auth/adapters/libsql";
+
+export const auth = betterAuth({
+  database: libSqlAdapter(db),
+  secret: process.env.BETTER_AUTH_SECRET,
+  baseURL: process.env.BETTER_AUTH_URL,
+  emailAndPassword: { enabled: true },
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    },
+    facebook: {
+      clientId: process.env.FACEBOOK_CLIENT_ID,
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+    },
+  },
+});
+
+// src/app/api/auth/[...all]/route.ts
+export const { POST, GET } = toNextJsHandler(auth);
+
+// Component usage
+const { data: session } = useSession();
+await signIn.email({ email, password });
+await signIn.social({ provider: "google", callbackURL: "/" });
+await signOut();
+```
+
+**Environment Variables**
+
+```env
+BETTER_AUTH_SECRET=<32-byte base64 secret>
+BETTER_AUTH_URL=http://localhost:3000
+NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+GOOGLE_CLIENT_ID=<from Google Cloud Console>
+GOOGLE_CLIENT_SECRET=<from Google Cloud Console>
+FACEBOOK_CLIENT_ID=<from Facebook Developers>
+FACEBOOK_CLIENT_SECRET=<from Facebook Developers>
+```
+
+**Key Files Created**
+
+- `src/lib/auth.ts` - Better Auth configuration
+- `src/lib/auth-client.ts` - Client-side auth utilities
+- `src/app/api/auth/[...all]/route.ts` - API handler
+- `src/app/login/page.tsx` - Login page with email + OAuth
+- `src/app/signup/page.tsx` - Signup page with email + OAuth
+- `src/components/AuthStatus.tsx` - Header component (user info + logout)
+
+**Feature Domain(s)**
+
+- Authentication
+- Infrastructure
+- Security
+- UI
+- API
+
+**Index Tags**
+`#auth #better-auth #oauth #google #facebook #session #security #turso #libsql`
+
+---
+
+### D018 - Authentication: Custom Email/Password with bcrypt (No OAuth)
+
+**Date**: 2026-08-20  
+**Status**: Superseded by D023  
+**Overrides**: D017 (Better Auth with OAuth)
+
+### Summary of Changes
+
+Authentication system changed from Better Auth with OAuth (Google, Facebook) to a custom email/password implementation with bcrypt password hashing and Turso database integration. Key changes:
+
+- ✅ Removed OAuth configuration (Google, Facebook)
+- ✅ Created `users` table in Turso with: id, email, password_hash, role (admin/user), is_active, created_at, last_login, updated_at
+- ✅ Implemented bcrypt password hashing (12 salt rounds) in `src/lib/password.ts`
+- ✅ Created login API endpoint: `POST /api/auth/sign-in/email`
+- ✅ Seeded admin user: `s.j.ingolfsson@gmail.com` with default password `ChangeMe@123`
+- ✅ Simplified auth configuration to just AUTH_ROLES type export
+
+### Rationale
+
+- **No sign-up needed**: MVP requirement—Lions is single-team, admin-only user management
+- **Security first**: bcrypt (12 rounds) is industry-standard password hashing (OWASP A02:2021 compliant)
+- **Simplicity**: Removes complexity of OAuth provider setup and configuration
+- **Admin control**: Users added only via Turso console or admin API (to build)
+- **Privacy**: No reliance on third-party services; all data in own database
+- **Role-based access**: Support for 'admin' and 'user' roles built-in
+- **Cost**: Zero dependency costs (bcrypt is free, npm package)
+- **Scalability**: Easy to add TOTP MFA or other auth mechanisms later
+
+### Minimal Code Example
+
+```typescript
+// src/lib/password.ts - Password utilities
+import bcrypt from 'bcrypt';
+
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 12); // 12 salt rounds
+}
+
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash);
+}
+
+// src/app/api/auth/login/route.ts - Login endpoint
+export async function POST(request: Request) {
+  const { email, password } = await request.json();
+  const user = await db.execute(
+    "SELECT * FROM users WHERE email = ?",
+    [email]
+  );
+
+  if (user.rows.length === 0 || !await verifyPassword(password, user.rows[0].password_hash)) {
+    return Response.json({ error: "Invalid credentials" }, { status: 401 });
+  }
+
+  // Update last_login and return user
+  await db.execute("UPDATE users SET last_login = ? WHERE id = ?", [new Date().toISOString(), user.rows[0].id]);
+  return Response.json({ user: { id: user.rows[0].id, email: user.rows[0].email, role: user.rows[0].role } });
+}
+
+// Database schema
+CREATE TABLE users (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('admin', 'user')),
+  is_active BOOLEAN DEFAULT 1,
+  created_at TEXT NOT NULL,
+  last_login TEXT,
+  updated_at TEXT NOT NULL
+);
+```
+
+### Security Posture
+
+| Metric                   | Value                                                |
+| ------------------------ | ---------------------------------------------------- |
+| **Algorithm**            | bcrypt                                               |
+| **Salt Rounds**          | 12 (OWASP recommended: 10-12)                        |
+| **Hash Time**            | ~100ms per password                                  |
+| **Estimated Crack Time** | 30+ years (8 GPU cards @ 9.6B hashes/sec)            |
+| **Default Password**     | ChangeMe@123 (must change on first login)            |
+| **MFA Ready**            | TOTP/email codes can be added without schema changes |
+
+### MFA Options (Free, to implement later)
+
+1. **TOTP** (recommended): Google Authenticator, Authy, Microsoft Authenticator
+2. **Email codes**: 6-digit codes sent via email (5-10 min expiry)
+3. **Backup codes**: One-time recovery codes for account access if device lost
+
+See `PASSWORD_SECURITY_GUIDE.md` for full MFA implementation details.
+
+### Key Files Created/Modified
+
+- `src/lib/auth.ts` - Simplified (AUTH_ROLES types only)
+- `src/lib/password.ts` - NEW: bcrypt hash/verify utilities
+- `src/app/api/auth/login/route.ts` - NEW: Login endpoint
+- `scripts/setup-db.ts` - Updated: users table schema + admin seeding
+- `PASSWORD_SECURITY_GUIDE.md` - NEW: Comprehensive security & MFA guide
+
+### Feature Domain(s)
+
+- Authentication
+- Security
+- Database
+- API
+- Infrastructure
+- Privacy
+
+### Index Tags
+
+`#auth #custom #bcrypt #no-oauth #email-password #admin-only #turso #security #mfa-ready`
+
+---
+
+### D019 - Align Authentication with the Deployed Users Schema
+
+**Date**: 2026-08-23
+**Status**: Superseded by D023
+**Overrides**: The Better Auth table assumptions in D017 and the conflicting account-table implementation described during the D018 transition.
+
+### Summary of Changes
+
+The custom sign-in endpoint now matches the users schema used by the remote database. It selects `users.password_hash` and verifies it with bcrypt. It no longer selects the nonexistent `users.name` column or reads credentials from a separate `account` table.
+
+The local setup script creates and seeds the same `users` schema so local initialization does not recreate the remote authentication failure.
+
+### Rationale
+
+- The remote database returned `SQL_INPUT_ERROR: no such column: name`, proving the SQL endpoint was reachable and the query schema was wrong.
+- Existing authentication documentation and the deployed schema contract use `password_hash` on `users`.
+- Keeping one custom authentication schema avoids silently diverging local and remote environments.
+- The Turso analytics-service warning is independent of SQL database connectivity.
+
+### Minimal Code Example
+
+```typescript
+const userResult = await db.execute(
+  "SELECT id, email, password_hash, role, is_active FROM users WHERE email = ?",
+  [email],
+);
+const passwordMatch = await verifyPassword(password, user.password_hash);
+```
+
+### Feature Domain(s)
+
+- Authentication
+- Database
+- API
+- Security
+
+### Index Tags
+
+`#auth #custom #bcrypt #schema-alignment #remote #turso #debugging`
+
+---
+
+### D020 - Persistent Local Turso Development Database
+
+**Date**: 2026-08-23
+**Status**: On Hold
+**Overrides**: Superseded for current development by D021
+
+### Summary of Changes
+
+The project has a documented option to use the Turso CLI with a persistent SQLite file and local libSQL HTTP server:
+
+```powershell
+turso dev --db-file local.db
+```
+
+The application can connect to `http://127.0.0.1:8080` through `@libsql/client`. Local schema and seed data are initialized with `npm run setup:db` and are isolated from Turso Cloud.
+
+This option is on hold. Current development and login testing use the configured Turso Cloud database, as defined by D021. Local setup is retained as a future development workflow only.
+
+The full workflow is documented in `LOCAL_DEVELOPMENT.md`.
+
+### Rationale
+
+- Follows Turso's recommended local-development workflow.
+- Avoids cloud usage and quota costs during development.
+- Persists local changes between server restarts.
+- Makes schema and authentication debugging reproducible without modifying the remote database.
+
+### Minimal Code Example
+
+```env
+TURSO_DATABASE_URL=http://127.0.0.1:8080
+TURSO_AUTH_TOKEN=local-development-only
+```
+
+### Feature Domain(s)
+
+- Database
+- Infrastructure
+- Development Workflow
+
+### Index Tags
+
+`#turso #local-development #libsql #sqlite #database #infrastructure`
+
+---
+
+### D021 - Use Turso Cloud for Current Development Testing
+
+**Date**: 2026-08-23
+**Status**: Active
+**Overrides**: D020 for current development and testing
+
+### Summary of Changes
+
+Development and authentication testing currently target the configured Turso Cloud database through `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` in `.env.local`. The persistent local Turso workflow described in D020 is deferred until a later date.
+
+### Rationale
+
+- Login testing must exercise the deployed cloud schema and seeded user data.
+- Avoids confusing local database state with the database used by the running application.
+- Keeps the local Turso workflow documented without making it the active setup requirement.
+
+### Minimal Code Example
+
+```env
+TURSO_DATABASE_URL=libsql://score-tracker-sjingo.aws-eu-west-1.turso.io
+TURSO_AUTH_TOKEN=<cloud-token>
+```
+
+### Feature Domain(s)
+
+- Database
+- Infrastructure
+- Development Workflow
+- Authentication
+
+### Index Tags
+
+`#turso #cloud-development #authentication #testing #infrastructure`
+
+---
+
+### D022 - Minimize Authentication Dependencies
+
+**Date**: 2026-08-23  
+**Status**: Superseded by D023  
+**Architectural Decision**: Yes
+
+### Summary of Changes
+
+Authentication and session management should use packages and platform capabilities already present in the project whenever they meet the security and runtime requirements. Do not add a new authentication, session, or database package without a demonstrated need.
+
+The current custom authentication flow retains the already-installed `jose` package for signing and verifying session tokens. No additional package is required for the session-cookie implementation.
+
+### Rationale
+
+- Reduces dependency count, upgrade surface, bundle impact, and maintenance overhead.
+- Avoids introducing a second authentication abstraction when the project already uses custom bcrypt authentication.
+- `jose` provides standard JWT signing, verification, and expiry handling and is already installed.
+- Native Node.js and Next.js APIs remain preferred for supporting tasks such as cookies, request handling, and database access.
+- A new dependency may be adopted later only when it provides a clear benefit that existing tools cannot provide safely or practically.
+
+### Minimal Code Example
+
+```typescript
+import { SignJWT, jwtVerify } from "jose";
+
+const token = await new SignJWT({ user })
+  .setProtectedHeader({ alg: "HS256" })
+  .setExpirationTime("7d")
+  .sign(secret);
+```
+
+### Feature Domain(s)
+
+- Architecture
+- Authentication
+- Security
+- Infrastructure
+
+### Index Tags
+
+`#architecture #dependencies #auth #security #jose #simplicity`
+
+---
+
+### D023 - Adopt Better Auth with Turso via Kysely
+
+**Date**: 2026-08-23  
+**Status**: Active  
+**Overrides**: D018, D019, and D022 for authentication implementation  
+**Architectural Decision**: Yes
+
+### Summary of Changes
+
+Authentication now uses Better Auth for email/password sign-in, sessions, cookies, and password hashing. Better Auth connects to the remote Turso Cloud database through Kysely and the `@libsql/kysely-libsql` dialect. The cloud database now contains Better Auth's `user`, `session`, `account`, and `verification` tables.
+
+The legacy custom bcrypt/JWT routes and helpers are removed. The existing Lions domain tables remain unchanged.
+
+### Rationale
+
+- Better Auth provides the standard session, cookie, credential, and expiry lifecycle instead of maintaining those security-sensitive parts locally.
+- The existing `@libsql/client` remains the database client for application domain queries and setup operations.
+- The focused Kysely libSQL bridge is required because the installed Better Auth version does not provide a native `@libsql/client` adapter.
+- The direct `bcrypt`, `jose`, and `better-sqlite3` dependencies were removed; the migration adds only the Kysely bridge and its direct Kysely peer.
+- The cloud administrator was reseeded through Better Auth so its credential uses Better Auth's native scrypt format.
+
+### Minimal Code Example
+
+```typescript
+export const auth = betterAuth({
+  database: { db, type: "sqlite" },
+  emailAndPassword: { enabled: true, disableSignUp: true },
+});
+```
+
+### Feature Domain(s)
+
+- Architecture
+- Authentication
+- Database
+- Security
+- Infrastructure
+
+### Index Tags
+
+`#architecture #better-auth #turso #kysely #sessions #scrypt #dependencies`
+
+---
+
 ## Quick Reference Index
 
 ### By Domain
 
-- **Database**: D002, D004, D006, D009, D010, D011, D012, D013, D014, D015
-- **API**: D003, D006, D009, D012, D013, D015
+- **Database**: D001, D002, D004, D006, D009, D010, D011, D012, D013, D014, D015, D018, D019, D020, D021, D023
+- **API**: D003, D006, D009, D012, D013, D015, D018, D019, D023
 - **UI**: D005, D008, D009, D012, D015
-- **Infrastructure**: D001, D002, D004, D011
-- **Privacy**: D007
-- **Architecture**: D006, D010
+- **Infrastructure**: D001, D002, D004, D011, D016, D018, D020, D021, D022, D023
+- **Privacy**: D007, D016
+- **Security**: D016, D023
+- **Authentication**: D023
+- **Architecture**: D006, D010, D023
 - **Player Management**: D005, D007, D009, D011, D012, D013, D014
 - **Data Validation**: D012
 - **Scope**: D014
@@ -686,7 +1143,11 @@ CREATE TABLE games (
 - **Player Status**: D013
 - **MVP Scope**: D014
 - **Venue & Location**: D015
+- **Authentication**: D023
+- **Dependency Management**: D022, D023
+- **Local Development**: D020, D021
+- **OAuth Integration**: D017 (superseded by D018)
 
 ### Active Decisions
 
-`#active`: D001, D002, D003, D004, D005, D006, D007, D008, D009, D010, D011, D012, D013, D014, D015
+`#active`: D001, D002, D003, D004, D005, D006, D007, D008, D009, D010, D011, D012, D013, D014, D015, D016, D021, D023
