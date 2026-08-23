@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description: "Track scores and manage your Lions team",
 };
 
-export default function RootLayout({ children }: any) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
