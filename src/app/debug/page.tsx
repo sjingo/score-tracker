@@ -97,11 +97,11 @@ export default function DebugPage() {
         );
     };
 
-    if (loading) return <div className="p-6 text-center">Loading debug data...</div>;
-    if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
+    if (loading) return <div className="p-4 text-center">Loading debug data...</div>;
+    if (error) return <div className="p-4 text-red-600">Error: {error}</div>;
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-gray-50 p-4">
             <div className="max-w-7xl mx-auto">
                 <h1 className="text-4xl font-bold mb-2">🔍 Debug Console</h1>
                 <p className="text-gray-600 mb-6">
@@ -109,7 +109,7 @@ export default function DebugPage() {
                 </p>
 
                 {/* Summary */}
-                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div className="bg-white rounded-lg shadow-md p-4 mb-6">
                     <div className="cursor-pointer" onClick={() => toggleTable("summary")}>
                         <h2 className="text-2xl font-bold mb-4">
                             {expandedTables.has("summary") ? "▼" : "▶"} Summary
@@ -118,7 +118,7 @@ export default function DebugPage() {
                     {expandedTables.has("summary") && (
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             {Object.entries(data?.summary || {}).map(([key, count]) => (
-                                <div key={key} className="bg-blue-50 p-4 rounded border-l-4 border-blue-500">
+                                <div key={key} className="bg-blue-50 p-2 rounded border-l-4 border-blue-500">
                                     <div className="text-xs font-semibold text-blue-600 uppercase">{key}</div>
                                     <div className="text-3xl font-bold text-blue-900">{count}</div>
                                 </div>
@@ -129,7 +129,7 @@ export default function DebugPage() {
 
                 {/* Tables */}
                 {Object.entries(data?.tables || {}).map(([tableName, rows]) => (
-                    <div key={tableName} className="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <div key={tableName} className="bg-white rounded-lg shadow-md p-4 mb-6">
                         <div
                             className="cursor-pointer"
                             onClick={() => toggleTable(tableName)}
@@ -151,7 +151,7 @@ export default function DebugPage() {
             </div>
 
             {/* Console Logger Display */}
-            <div className="fixed bottom-4 right-4 bg-black text-white p-4 rounded w-96 max-h-64 overflow-y-auto font-mono text-xs">
+            <div className="fixed bottom-4 right-4 bg-black text-white p-2 rounded w-96 max-h-64 overflow-y-auto font-mono text-xs">
                 <div className="font-bold mb-2">📋 Console Output</div>
                 <div className="text-gray-300">Check browser console (F12) for detailed logs</div>
             </div>

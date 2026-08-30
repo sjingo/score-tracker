@@ -32,6 +32,12 @@ export default function PlayersView() {
         load();
     }, []);
 
+    const handleRemovePlayer = async (playerId: string) => {
+        e.preventDefault();
+
+
+    }
+
     const handleAddPlayer = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -64,8 +70,7 @@ export default function PlayersView() {
 
     return (
         <div className="max-w-4xl mx-auto p-4">
-            <h1 className="text-3xl font-bold mb-6">🦁 Lions Squad</h1>
-
+            <h1 className="text-3xl font-bold mb-6 sr-only">Lions Squad</h1>
             {/* Add Player Form */}
             <div className="bg-white p-6 rounded-lg shadow-md mb-6">
                 <h2 className="text-xl font-semibold mb-4">Add Player</h2>
@@ -103,20 +108,22 @@ export default function PlayersView() {
             {/* Players List */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {players.length === 0 ? (
-                    <p className="col-span-full text-gray-500 text-center py-8">
+                    <p className="col-span-full text-gray-500 text-center py-6">
                         No players yet. Add one above!
                     </p>
                 ) : (
                     players.map((player) => (
                         <div
                             key={player.id}
-                            className="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-500"
+                            className="bg-white p-2 rounded-lg shadow-md border-l-4 border-green-500"
                         >
                             <div className="flex items-start justify-between">
                                 <div>
-                                    <h3 className="font-semibold text-lg">
-                                        {player.name}
-                                    </h3>
+                                    <div className="flex justify-between w-100">
+                                        <h3 className="font-semibold text-lg">
+                                            {player.name}
+                                        </h3>
+                                    </div>
                                     {player.jersey_number && (
                                         <p className="text-2xl font-bold text-blue-600">
                                             #{player.jersey_number}
@@ -124,11 +131,11 @@ export default function PlayersView() {
                                     )}
                                 </div>
                             </div>
-                            <p className="text-xs text-gray-500 mt-2">{player.anonymised_id}</p>
+                            <span className="text-xs text-gray-500 mt-2">{player.anonymised_id}</span>
                         </div>
                     ))
                 )}
             </div>
-        </div>
+        </div >
     );
 }

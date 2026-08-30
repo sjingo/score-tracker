@@ -27,10 +27,10 @@ const PROTECTED_ROUTES = ["/", "/debug", "/api/"];
  */
 const PUBLIC_ROUTES = ["/login", "/signup"];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // Skip middleware for static assets, Next.js internals, etc.
+  // Skip proxy for static assets, Next.js internals, etc.
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||

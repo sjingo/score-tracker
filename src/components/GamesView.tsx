@@ -1,41 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { Game, Player, GameType, Scorer, OPPOSITION_GOAL } from './types'
 
-interface Game {
-    id: string;
-    opposition_name: string;
-    score_for: number;
-    score_against: number;
-    match_date: string;
-    status: string;
-    game_type_display: string;
-    game_type_color?: string;
-    location?: string;
-    scorers?: Scorer[];
-}
 
-interface Scorer {
-    id: string;
-    player_id: string;
-    player_name: string;
-    goal_count: number;
-    anonymised_id?: string;
-}
-
-interface Player {
-    id: string;
-    name: string;
-    jersey_number: number;
-    anonymised_id: string;
-    is_active: boolean;
-}
-
-interface GameType {
-    id: string;
-    display_name: string;
-    color?: string;
-}
 
 export default function GamesView() {
     const [games, setGames] = useState<Game[]>([]);
@@ -61,7 +29,6 @@ export default function GamesView() {
     // Fetch initial data
     useEffect(() => {
         const fetchData = async () => {
-            console.log("[GamesView] Fetching initial data...");
             try {
                 const [gamesRes, playersRes, typesRes] = await Promise.all([
                     fetch("/api/games"),
@@ -73,9 +40,7 @@ export default function GamesView() {
                 const playersData = await playersRes.json();
                 const typesData = await typesRes.json();
 
-                console.log("[GamesView] Games:", gamesData.data);
-                console.log("[GamesView] Players:", playersData.data);
-                console.log("[GamesView] Game Types:", typesData.data);
+
 
                 setGames(gamesData.data || []);
                 setPlayers(playersData.data || []);
@@ -92,7 +57,6 @@ export default function GamesView() {
     }, []);
 
     const handleCreateGame = async (e: React.FormEvent) => {
-        console.log("[GamesView] Creating new game...", newGame);
         e.preventDefault();
 
         try {
@@ -105,7 +69,6 @@ export default function GamesView() {
             const result = await res.json();
 
             if (result.success) {
-                console.log("[GamesView] Game created:", result.data);
                 setGames([result.data, ...games]);
                 setNewGame({
                     oppositionName: "",
@@ -125,9 +88,38 @@ export default function GamesView() {
     };
 
     const handleRecordGoal = async (gameId: string) => {
-        console.log(
-            `[GamesView] Recording goal for game ${gameId}, player ${selectedPlayer}, goals: ${goalCount}`
-        );
+
+        if (selectedPlayer === OPPOSITION_GOAL) {
+            try {
+                const res = await fetch(`/api/games/${gameId}/opposition-goal`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        goalCount: goalCount,
+                    }),
+
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    // Refresh the games list to get updated scores
+                    const gamesRes = await fetch("/api/games");
+                    const gamesData = await gamesRes.json();
+                    setGames(gamesData.data || []);
+                    setSelectedPlayer(null);
+                    setGoalCount(1);
+                    setError2(null);
+                } else {
+                    console.error("[GamesView] Failed to record opposition goal:", result.error);
+                    setError2(result.error);
+                }
+            } catch (err) {
+                console.error("[GamesView] Record opposition goal error:", err);
+                setError2(String(err));
+            }
+            return;
+        }
+
 
         if (!selectedPlayer) {
             console.warn("[GamesView] No player selected");
@@ -157,8 +149,6 @@ export default function GamesView() {
             const result = await res.json();
 
             if (result.success) {
-                console.log("[GamesView] Goal recorded:", result.data);
-                // Refresh the games list to get updated scores
                 const gamesRes = await fetch("/api/games");
                 const gamesData = await gamesRes.json();
                 setGames(gamesData.data || []);
@@ -176,7 +166,10 @@ export default function GamesView() {
     };
 
     const handleDeleteScorer = async (gameId: string, scorerId: string) => {
-        console.log(`[GamesView] Deleting scorer ${scorerId} from game ${gameId}`);
+
+        if (!window.confirm("Are you sure you want to delete this game?")) {
+            return;
+        }
 
         try {
             const res = await fetch(`/api/games/${gameId}/scores`, {
@@ -256,18 +249,18 @@ export default function GamesView() {
             setError(String(err));
         }
     };
+    console.log('selectedGame', selectedGame)
+    const activeGames = games.filter((g) => g.status === "in-progress");
+    const completedGames = games.filter((g) => g.status === "completed");
+    const activePlayers = useMemo(() => [{ id: OPPOSITION_GOAL, jersey_number: '0', name: 'Opposition Goal', is_active: true }, ...players.filter((p) => p.is_active)], [players]);
 
     if (loading)
         return (
-            <div className="p-4 text-center text-lg font-semibold">Loading...</div>
+            <div className="p-2 text-center text-lg font-semibold">Loading...</div>
         );
 
-    const activeGames = games.filter((g) => g.status === "in-progress");
-    const completedGames = games.filter((g) => g.status === "completed");
-    const activePlayers = players.filter((p) => p.is_active);
-
     return (
-        <div className="max-w-6xl mx-auto p-4">
+        <div className="max-w-6xl mx-auto p-2">
             <h1 className="text-4xl font-bold mb-2">🦁 Lions Games</h1>
             <p className="text-gray-600 mb-6">
                 Total: {games.length} | In Progress: {activeGames.length} | Completed:{" "}
@@ -281,7 +274,7 @@ export default function GamesView() {
             )}
 
             {/* New Game Form */}
-            <div className="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-green-500">
+            <div className="bg-white p-4 rounded-lg shadow-md mb-6 border-l-4 border-green-500">
                 <h2 className="text-2xl font-bold mb-4">➕ Create New Game</h2>
                 <form onSubmit={handleCreateGame} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -353,7 +346,7 @@ export default function GamesView() {
                         {activeGames.map((game) => (
                             <div
                                 key={game.id}
-                                className="bg-white p-6 rounded-lg shadow-md border-l-4 border-yellow-500"
+                                className="bg-white p-4 rounded-lg shadow-md border-l-4 border-yellow-500"
                             >
                                 {/* Game Header */}
                                 <div className="flex justify-between items-start mb-4">
@@ -388,7 +381,7 @@ export default function GamesView() {
                                 </div>
 
                                 {/* Score Display */}
-                                <div className="bg-blue-50 p-4 rounded mb-4 border-2 border-blue-200">
+                                <div className="bg-blue-50 p-2 rounded mb-4 border-2 border-blue-200">
                                     <div className="text-center">
                                         <div className="text-4xl font-bold text-blue-900">
                                             {game.score_for} - {game.score_against}
@@ -435,7 +428,7 @@ export default function GamesView() {
                                 </div>
 
                                 {/* Record Goal Form */}
-                                <div className="bg-gray-50 p-4 rounded">
+                                <div className="bg-gray-50 p-2 rounded">
                                     <h4 className="font-semibold mb-3">⚽ Record Goal:</h4>
                                     {scoringError && (
                                         <div className="bg-red-100 text-red-700 p-2 rounded mb-2 text-sm">
@@ -452,17 +445,20 @@ export default function GamesView() {
                                             className="flex-1 border p-2 rounded bg-white"
                                         >
                                             <option value="">Select player...</option>
-                                            {activePlayers.map((player) => (
-                                                <option key={player.id} value={player.id}>
-                                                    {player.name}
-                                                    {player.jersey_number ? ` (#${player.jersey_number})` : ""}
-                                                </option>
-                                            ))}
+                                            {activePlayers.map((player) => {
+
+                                                return (
+                                                    <option key={player.id} value={player.id}>
+                                                        {player.name}
+                                                        {player.jersey_number ? ` (#${player.jersey_number})` : ""}
+                                                    </option>
+                                                )
+                                            })}
                                         </select>
                                         <input
                                             type="number"
-                                            min="1"
-                                            max="5"
+                                            min={- 99}
+                                            max={99}
                                             value={goalCount}
                                             onChange={(e) => setGoalCount(parseInt(e.target.value))}
                                             className="w-16 border p-2 rounded"
@@ -499,7 +495,7 @@ export default function GamesView() {
                         {completedGames.map((game) => (
                             <div
                                 key={game.id}
-                                className="bg-gray-100 p-4 rounded-lg shadow border-l-4 border-gray-500"
+                                className="bg-gray-100 p-2 rounded-lg shadow border-l-4 border-gray-500"
                             >
                                 <div className="flex justify-between items-center">
                                     <div>
@@ -511,6 +507,12 @@ export default function GamesView() {
                                         </p>
                                     </div>
                                     <div className="text-2xl font-bold">{game.score_for} - {game.score_against}</div>
+                                    <button
+                                        onClick={() => handleUpdateGameStatus(game.id, "in-progress")}
+                                        className="text-blue-600 hover:text-blue-900 text-sm"
+                                    >
+                                        Edit
+                                    </button>
                                     <button
                                         onClick={() => handleDeleteGame(game.id)}
                                         className="text-red-600 hover:text-red-900 text-sm"
@@ -525,7 +527,7 @@ export default function GamesView() {
             )}
 
             {games.length === 0 && (
-                <div className="bg-gray-100 p-8 rounded-lg text-center text-gray-600">
+                <div className="bg-gray-100 p-6 rounded-lg text-center text-gray-600">
                     <p className="text-lg">No games yet. Create one above to get started!</p>
                 </div>
             )}

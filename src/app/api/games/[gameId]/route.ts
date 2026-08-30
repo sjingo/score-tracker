@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { InValue } from "@libsql/client";
 
 // ============================================================================
 // GET specific game with scorers
@@ -94,7 +95,7 @@ export async function PATCH(
 
     // Build update query dynamically
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: InValue[] = [];
 
     if (status !== undefined) {
       updates.push("status = ?");
@@ -168,7 +169,11 @@ export async function PATCH(
     values.push(gameId);
 
     const query = `UPDATE games SET ${updates.join(", ")} WHERE id = ?`;
-    await db.execute(query, values);
+    // await db.execute(query, values);
+    await db.execute({
+      sql: query,
+      args: [...values, gameId],
+    });
 
     console.log(`[PATCH /api/games/:gameId] Game updated successfully`);
 

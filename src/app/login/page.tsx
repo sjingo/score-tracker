@@ -27,14 +27,14 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-            <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
+            <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6">
                 <h1 className="text-3xl font-bold text-center mb-2 text-gray-900">
                     🦁 Lions Score Tracker
                 </h1>
                 <p className="text-center text-gray-600 mb-8">Sign in to your account</p>
 
                 {error && (
-                    <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                    <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
                         {error}
                     </div>
                 )}
