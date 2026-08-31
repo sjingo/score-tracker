@@ -66,18 +66,17 @@ export async function POST(request: Request) {
     // Call Better Auth's server method
     // This verifies the email/password against the database hash
     // All password verification happens server-side (secure)
-    const result = await auth.api.signInEmail(
-      {
+    const result = await auth.api.signInEmail({
+      body: {
         email: trimmedEmail,
         password,
       },
-      {
-        headers: await headers(),
-      },
-    );
+
+      headers: await headers(),
+    });
 
     // Better Auth returns error if credentials are invalid
-    if (result.error) {
+    if (!result) {
       console.warn(`Sign in attempt failed for ${trimmedEmail}`);
       return Response.json(
         { error: "Invalid email or password" },

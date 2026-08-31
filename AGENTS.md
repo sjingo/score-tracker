@@ -183,9 +183,9 @@ public/                   # Static assets
 
 ## Related Documents
 
-- `DECISION_LOG.md` - Architectural decisions (D001-D018)
-- `APP_DOCUMENTATION.md` - Full feature specs & user flows
-- `TURSO_SCHEMA.md` - Database schema details
-- `schema.sql` - Production SQL
-- `PASSWORD_SECURITY_GUIDE.md` - Password security & MFA implementation guide
-- `AUTH_COMPLETE_SETUP.md` - Auth setup summary & next steps
+- `.github/DECISION_LOG.md` - Architectural decisions (D001-D018)
+- `.github/APP_DOCUMENTATION.md` - Full feature specs & user flows
+- `.github/TURSO_SCHEMA.md` - Database schema details
+- `.github/schema.sql` - Production SQL
+- `.github/PASSWORD_SECURITY_GUIDE.md` - Password security & MFA implementation guide
+- `.github/AUTH_COMPLETE_SETUP.md` - Auth setup summary & next steps

@@ -32,11 +32,6 @@ export default function PlayersView() {
         load();
     }, []);
 
-    const handleRemovePlayer = async (playerId: string) => {
-        e.preventDefault();
-
-
-    }
 
     const handleAddPlayer = async (e: React.FormEvent) => {
         e.preventDefault();

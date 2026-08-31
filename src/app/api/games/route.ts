@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { randomUUID } from "crypto";
+import { Row } from "@libsql/client";
 
 // ============================================================================
 // GET all games for Lions team (with game_types and scorers)
 // ============================================================================
-export async function GET(request: NextRequest) {
+interface EnrichedGame {
+  scorers: Row[];
+  length: number;
+}
+export async function GET() {
   console.log("[GET /api/games] Fetching all games for Lions team");
 
   try {
@@ -39,13 +44,15 @@ export async function GET(request: NextRequest) {
 
     // Enrich each game with scorers
     const enrichedGames = await Promise.all(
-      gamesResult.rows.map(async (game: any) => {
+      //@ts-expect-error TODO: type EnrichedGame
+      gamesResult.rows.map(async (game: EnrichedGame[]) => {
         const scorersResult = await db.execute(
           `SELECT gs.*, p.anonymised_id
-           FROM game_scorers gs
-           LEFT JOIN players p ON gs.player_id = p.id
-           WHERE gs.game_id = ?
-           ORDER BY gs.goal_count DESC`,
+          FROM game_scorers gs
+          LEFT JOIN players p ON gs.player_id = p.id
+          WHERE gs.game_id = ?
+          ORDER BY gs.goal_count DESC`,
+          // @ts-expect-error TODO: type EnrichedGame
           [game.id],
         );
 

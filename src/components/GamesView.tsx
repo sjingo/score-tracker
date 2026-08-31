@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Game, Player, GameType, Scorer, OPPOSITION_GOAL } from './types'
+import { Game, Player, GameType, OPPOSITION_GOAL } from './types'
 
 
 

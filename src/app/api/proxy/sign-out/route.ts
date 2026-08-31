@@ -19,7 +19,7 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
-export async function POST(request: Request) {
+export async function POST() {
   try {
     // Verify user has active session before sign out
     const session = await auth.api.getSession({

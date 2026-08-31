@@ -1,6 +1,0 @@
-- next
-- nextAuth
-- hosted on vercel
-- indexDB persistence ( to start with )
-
-===

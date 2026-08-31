@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { randomUUID } from "crypto";
-import { Game } from "@/components/types";
 
 // ============================================================================
 // PATCH update - increment score_against by gameId should default to 0 if not set score is 1

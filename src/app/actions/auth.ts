@@ -34,21 +34,23 @@ export async function signInAction(
 
     // Better Auth's signInEmail API validates password against database hash
     // Password verification happens server-side only
-    const result = await auth.api.signInEmail(
-      {
+    const result = await auth.api.signInEmail({
+      body: {
         email,
         password,
       },
-      {
-        headers: await headers(),
-      },
-    );
+      headers: await headers(),
+    });
 
     // Check for Better Auth errors
-    if (result.error) {
+    if (!result) {
+      console.error(
+        "[API/actions/auth/signInAction] Sign in failed: No response from auth.api.signInEmail",
+        result,
+      );
       return {
         success: false,
-        error: "Invalid email or password",
+        error: "Error signing in Invalid email or password",
       };
     }
 
@@ -74,6 +76,7 @@ export async function getSessionAction() {
 
     return session;
   } catch (error) {
+    throw new Error(error as string);
     // Session validation failed or doesn't exist
     return null;
   }

@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
 // GET Lions team info
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const result = await db.execute(
       "SELECT * FROM teams WHERE team_name = 'Lions'",

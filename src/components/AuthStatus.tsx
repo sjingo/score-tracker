@@ -3,6 +3,7 @@
 import { useSession, signOut } from "@/lib/auth-client";
 import Link from "next/link";
 import { Button } from "./Button";
+import { redirect } from "next/navigation";
 
 export function AuthStatus() {
     const { data: session } = useSession();
@@ -25,7 +26,8 @@ export function AuthStatus() {
             <button
                 onClick={async () => {
                     await signOut();
-                    window.location.href = "/";
+                    // window.location.href = "/";
+                    redirect("/login");
                 }}
                 className="px-3 py-2 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
             >

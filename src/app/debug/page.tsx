@@ -6,14 +6,15 @@ interface DebugData {
     timestamp: string;
     summary: Record<string, number>;
     tables: {
-        teams: any[];
-        players: any[];
-        gameTypes: any[];
-        games: any[];
-        gameScorers: any[];
-        seasonStats: any[];
+        teams: teams[];
+        players: players[];
+        gameTypes: game_types[];
+        games: games[]
+        gameScorers: game_scorers[];
+        seasonStats: season_stats[];
     };
 }
+
 
 export default function DebugPage() {
     const [data, setData] = useState<DebugData | null>(null);
@@ -60,7 +61,7 @@ export default function DebugPage() {
         setExpandedTables(newExpanded);
     };
 
-    const renderTable = (tableName: string, rows: any[]) => {
+    const renderTable = (tableName: string, rows: DebugData['tables']['teams'] | DebugData['tables']['players'] | DebugData['tables']['gameTypes'] | DebugData['tables']['games'] | DebugData['tables']['gameScorers'] | DebugData['tables']['seasonStats']) => {
         if (rows.length === 0) {
             return <div className="text-gray-500 italic">No data</div>;
         }
@@ -85,7 +86,10 @@ export default function DebugPage() {
                                 {columns.map((col) => (
                                     <td key={`${idx}-${col}`} className="border p-2">
                                         <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                            {String(row[col] !== null ? row[col] : "NULL")}
+                                            {
+                                                //@ts-expect-error key string of type needs formatting here
+                                                (String(row[col] ?? "NULL"))
+                                            }
                                         </code>
                                     </td>
                                 ))}
@@ -137,13 +141,13 @@ export default function DebugPage() {
                             <h2 className="text-2xl font-bold mb-4">
                                 {expandedTables.has(tableName) ? "▼" : "▶"} {tableName}
                                 <span className="text-sm font-normal text-gray-600 ml-2">
-                                    ({(rows as any[]).length} rows)
+                                    ({(rows).length} rows)
                                 </span>
                             </h2>
                         </div>
                         {expandedTables.has(tableName) && (
                             <div className="mt-4">
-                                {renderTable(tableName, rows as any[])}
+                                {renderTable(tableName, rows)}
                             </div>
                         )}
                     </div>

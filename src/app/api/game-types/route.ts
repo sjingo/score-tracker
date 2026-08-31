@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
 // GET all game types for Lions team
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get Lions team ID
     const teamsResult = await db.execute(

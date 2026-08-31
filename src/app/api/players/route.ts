@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { randomUUID } from "crypto";
 
 // GET all players
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const result = await db.execute(
       "SELECT * FROM players WHERE is_active = 1 ORDER BY jersey_number ASC",
