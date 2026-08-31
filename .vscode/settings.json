@@ -1,5 +1,10 @@
 {
   "js/ts.tsdk.path": "node_modules\\typescript\\lib",
+  "copilot.excludeFiles": {
+    "**/.env": true,
+    "**/.env.local": true,
+    "**/.env.*.local": true
+  },
   "workbench.editor.customLabels.patterns": {
     "**/app/**/page.tsx": "${dirname(1)}/${dirname} - page.tsx",
     "**/app/**/layout.tsx": "${dirname(1)}/${dirname} - layout.tsx",
@@ -9,10 +14,5 @@
     "**/app/**/template.tsx": "${dirname(1)}/${dirname} - template.tsx",
     "**/app/**/default.tsx": "${dirname(1)}/${dirname} - default.tsx",
     "**/app/**/route.ts": "${dirname(1)}/${dirname} - route.ts"
-  },
-  "copilot.excludeFiles": {
-    "**/.env": true,
-    "**/.env.local": true,
-    "**/.env.*.local": true
   }
 }

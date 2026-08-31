@@ -70,7 +70,7 @@ export async function POST(
 
   try {
     const body = await request.json();
-    const { playerId, playerName, playerNumber, goalCount = 1 } = body;
+    const { playerId, playerNumber, goalCount = 1 } = body;
 
     console.log("[POST /api/games/:gameId/scores] Request body:", body);
 

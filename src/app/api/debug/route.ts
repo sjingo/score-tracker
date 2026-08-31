@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
 // ============================================================================
 // GET all data from all tables (for debugging/console viewing)
 // ============================================================================
-export async function GET(request: NextRequest) {
+
+export async function GET() {
   console.log("[GET /api/debug] Fetching all data from all tables");
 
   try {

@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "lint:fix": "eslint --fix",
-    "setup:db": "tsx scripts/setup-db.ts"
+    "lint:fix": "eslint --fix"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
