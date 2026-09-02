@@ -5,8 +5,8 @@
  * Credentials are sent to YOUR server (not an external auth service), making this secure.
  *
  * Network Security:
- * - Credentials sent to /api/proxy/sign-in (your own server)
- * - Better Auth verifies password server-side (not in browser)
+ * - Credentials sent over HTTPS to /api/proxy/sign-in (your own server)
+ * - Better Auth verifies the password server-side
  * - Response includes Set-Cookie header with HttpOnly session token
  * - Browser automatically stores cookie (JavaScript cannot access it)
  *
@@ -32,8 +32,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json();
-    const { email, password } = body;
+    const { email, password } = await request.json();
 
     // Validate inputs
     if (!email || !password) {
