@@ -83,12 +83,16 @@ export async function POST(
       );
     }
 
-    if (goalCount < 1 || typeof goalCount !== "number") {
+    if (
+      typeof goalCount !== "number" ||
+      !Number.isInteger(goalCount) ||
+      goalCount === 0
+    ) {
       console.warn(
         `[POST /api/games/:gameId/scores] Invalid goalCount: ${goalCount}`,
       );
       return NextResponse.json(
-        { success: false, error: "Goal count must be >= 1" },
+        { success: false, error: "Goal count must be a non-zero integer" },
         { status: 400 },
       );
     }
@@ -158,6 +162,36 @@ export async function POST(
       "SELECT id, goal_count FROM game_scorers WHERE game_id = ? AND player_id = ?",
       [gameId, playerId],
     );
+
+    const currentPlayerGoals =
+      existingResult.rows.length > 0
+        ? Number(existingResult.rows[0].goal_count)
+        : 0;
+
+    const currentTeamGoalsResult = await db.execute(
+      "SELECT COALESCE(SUM(goal_count), 0) as total_goals FROM game_scorers WHERE game_id = ?",
+      [gameId],
+    );
+
+    const currentTeamGoals = Number(
+      currentTeamGoalsResult.rows[0].total_goals ?? 0,
+    );
+
+    if (
+      currentPlayerGoals + goalCount < 0 ||
+      currentTeamGoals + goalCount < 0
+    ) {
+      console.warn(
+        `[POST /api/games/:gameId/scores] Goal decrement would create a negative score`,
+      );
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Goals cannot reduce a player or team below 0",
+        },
+        { status: 400 },
+      );
+    }
 
     let scorerId: string;
     let newGoalCount: number;

@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Game, Player, GameType, OPPOSITION_GOAL } from './types'
+import { Game, Player, GameType, OPPOSITION_GOAL, Assist } from './types'
+import { PlusIcon } from "@/icons/plus";
+import { Mina } from "next/font/google";
+import { MinusIcon } from "@/icons/minus";
 
 
 
@@ -25,6 +28,12 @@ export default function GamesView() {
     const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
     const [goalCount, setGoalCount] = useState(1);
     const [scoringError, setError2] = useState<string | null>(null);
+
+    // Assist tracking states
+    const [selectedAssistGame, setSelectedAssistGame] = useState<string | null>(null);
+    const [selectedAssistPlayer, setSelectedAssistPlayer] = useState<string | null>(null);
+    const [assistCount, setAssistCount] = useState(1);
+    const [assistError, setAssistError] = useState<string | null>(null);
 
     // Fetch initial data
     useEffect(() => {
@@ -87,7 +96,7 @@ export default function GamesView() {
         }
     };
 
-    const handleRecordGoal = async (gameId: string) => {
+    const handleRecordGoal = async (gameId: string, goalCount: number) => {
 
         if (selectedPlayer === OPPOSITION_GOAL) {
             try {
@@ -107,7 +116,7 @@ export default function GamesView() {
                     const gamesData = await gamesRes.json();
                     setGames(gamesData.data || []);
                     setSelectedPlayer(null);
-                    setGoalCount(1);
+                    setGoalCount(goalCount);
                     setError2(null);
                 } else {
                     console.error("[GamesView] Failed to record opposition goal:", result.error);
@@ -165,9 +174,83 @@ export default function GamesView() {
         }
     };
 
-    const handleDeleteScorer = async (gameId: string, scorerId: string) => {
+    const handleRecordAssist = async (gameId: string, assistCount: number) => {
+        if (!selectedAssistPlayer) {
+            console.warn("[GamesView] No assist player selected");
+            setAssistError("Please select a player");
+            return;
+        }
 
-        if (!window.confirm("Are you sure you want to delete this game?")) {
+        try {
+            const player = players.find((p) => p.id === selectedAssistPlayer);
+            if (!player) {
+                console.warn("[GamesView] Assist player not found");
+                setAssistError("Player not found");
+                return;
+            }
+
+            const res = await fetch(`/api/games/${gameId}/assists`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    playerId: selectedAssistPlayer,
+                    playerName: player.name,
+                    playerNumber: player.jersey_number,
+                    assistCount: assistCount,
+                }),
+            });
+
+            const result = await res.json();
+
+            if (result.success) {
+                const gamesRes = await fetch("/api/games");
+                const gamesData = await gamesRes.json();
+                setGames(gamesData.data || []);
+                setSelectedAssistPlayer(null);
+                setAssistCount(1);
+                setAssistError(null);
+            } else {
+                console.error("[GamesView] Failed to record assist:", result.error);
+                setAssistError(result.error);
+            }
+        } catch (err) {
+            console.error("[GamesView] Record assist error:", err);
+            setAssistError(String(err));
+        }
+    };
+
+    const handleDeleteAssist = async (gameId: string, assistId: string) => {
+        if (!window.confirm("Are you sure you want to remove this assist?")) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/games/${gameId}/assists`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ assistId }),
+            });
+
+            const result = await res.json();
+
+            if (result.success) {
+                console.log("[GamesView] Assist deleted:", result.data);
+                // Refresh the games list
+                const gamesRes = await fetch("/api/games");
+                const gamesData = await gamesRes.json();
+                setGames(gamesData.data || []);
+            } else {
+                console.error("[GamesView] Failed to delete assist:", result.error);
+                setAssistError(result.error);
+            }
+        } catch (err) {
+            console.error("[GamesView] Delete assist error:", err);
+            setAssistError(String(err));
+        }
+    };
+
+    const handleDeleteScorer = async (gameId: string, scorerId: string) => {
+        if (!window.confirm("Are you sure you want to delete this scorer?")) {
             return;
         }
 
@@ -193,8 +276,8 @@ export default function GamesView() {
         } catch (err) {
             console.error("[GamesView] Delete scorer error:", err);
             setError2(String(err));
-        }
-    };
+        };
+    }
 
     const handleDeleteGame = async (gameId: string) => {
         console.log(`[GamesView] Deleting game ${gameId}`);
@@ -249,6 +332,7 @@ export default function GamesView() {
             setError(String(err));
         }
     };
+
     console.log('selectedGame', selectedGame)
     const activeGames = games.filter((g) => g.status === "in-progress");
     const completedGames = games.filter((g) => g.status === "completed");
@@ -428,7 +512,7 @@ export default function GamesView() {
                                 </div>
 
                                 {/* Record Goal Form */}
-                                <div className="bg-gray-50 p-2 rounded">
+                                <div className="bg-gray-50 p-2 rounded mb-4">
                                     <h4 className="font-semibold mb-3">⚽ Record Goal:</h4>
                                     {scoringError && (
                                         <div className="bg-red-100 text-red-700 p-2 rounded mb-2 text-sm">
@@ -442,7 +526,7 @@ export default function GamesView() {
                                                 setSelectedGame(game.id);
                                                 setSelectedPlayer(e.target.value);
                                             }}
-                                            className="flex-1 border p-2 rounded bg-white"
+                                            className="basis-1/2 border p-2 rounded bg-white"
                                         >
                                             <option value="">Select player...</option>
                                             {activePlayers.map((player) => {
@@ -455,25 +539,95 @@ export default function GamesView() {
                                                 )
                                             })}
                                         </select>
-                                        <input
-                                            type="number"
-                                            min={- 99}
-                                            max={99}
-                                            value={goalCount}
-                                            onChange={(e) => setGoalCount(parseInt(e.target.value))}
-                                            className="w-16 border p-2 rounded"
-                                        />
-                                        <button
-                                            onClick={() => handleRecordGoal(game.id)}
-                                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 font-semibold"
+                                        <div className="flex items-center gap-2 basis-1/2">
+                                            <PlusIcon className="w-10 h-10 text-blue-600"
+                                                onClick={() => handleRecordGoal(game.id, 1)}
+                                            />
+                                            <MinusIcon className="w-10 h-10 text-red-600"
+                                                onClick={() => handleRecordGoal(game.id, -1)}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Assists List */}
+                                <div className="mb-4">
+                                    <h4 className="font-semibold mb-2">Assists:</h4>
+                                    {game.assists && game.assists.length > 0 ? (
+                                        <div className="space-y-2">
+                                            {game.assists.map((assist) => (
+                                                <div
+                                                    key={assist.id}
+                                                    className="flex justify-between items-center bg-purple-100 p-3 rounded"
+                                                >
+                                                    <span>
+                                                        {assist.player_name}{" "}
+                                                        <span className="text-gray-500 text-sm">
+                                                            ({assist.anonymised_id})
+                                                        </span>
+                                                    </span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-bold bg-purple-500 text-white px-3 py-1 rounded">
+                                                            {assist.assist_count}
+                                                        </span>
+                                                        <button
+                                                            onClick={() =>
+                                                                handleDeleteAssist(game.id, assist.id)
+                                                            }
+                                                            className="text-red-600 hover:text-red-900 text-sm"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-gray-500 italic">No assists yet</p>
+                                    )}
+                                </div>
+
+                                {/* Record Assist Form */}
+                                <div className="bg-purple-50 p-2 rounded">
+                                    <h4 className="font-semibold mb-3">🎯 Record Assist:</h4>
+                                    {assistError && (
+                                        <div className="bg-red-100 text-red-700 p-2 rounded mb-2 text-sm">
+                                            {assistError}
+                                        </div>
+                                    )}
+                                    <div className="flex gap-2">
+                                        <select
+                                            value={selectedAssistGame === game.id ? selectedAssistPlayer || "" : ""}
+                                            onChange={(e) => {
+                                                setSelectedAssistGame(game.id);
+                                                setSelectedAssistPlayer(e.target.value);
+                                            }}
+                                            className="basis-1/2 border p-2 rounded bg-white"
                                         >
-                                            Add Goal
-                                        </button>
+                                            <option value="">Select player...</option>
+                                            {activePlayers.map((player) => {
+                                                if (player.id === OPPOSITION_GOAL) return null;
+                                                return (
+                                                    <option key={player.id} value={player.id}>
+                                                        {player.name}
+                                                        {player.jersey_number ? ` (#${player.jersey_number})` : ""}
+                                                    </option>
+                                                )
+                                            })}
+                                        </select>
+                                        <div className="flex items-center gap-2 basis-1/2">
+                                            <PlusIcon className="w-10 h-10 text-purple-600"
+                                                onClick={() => handleRecordAssist(game.id, 1)}
+                                            />
+                                            <MinusIcon className="w-10 h-10 text-red-600"
+                                                onClick={() => handleRecordAssist(game.id, -1)}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
                                 {/* Delete Game Button */}
-                                <div className="mt-4 flex justify-end">
+                                <div className="mt-4 flex justify-end" >
                                     <button
                                         onClick={() => handleDeleteGame(game.id)}
                                         className="text-red-600 hover:text-red-900 text-sm underline"
@@ -484,53 +638,58 @@ export default function GamesView() {
                             </div>
                         ))}
                     </div>
-                </div>
-            )}
+                </div >
+            )
+            }
 
             {/* Completed Games */}
-            {completedGames.length > 0 && (
-                <div className="mb-8">
-                    <h2 className="text-2xl font-bold mb-4">✅ Completed ({completedGames.length})</h2>
-                    <div className="space-y-3">
-                        {completedGames.map((game) => (
-                            <div
-                                key={game.id}
-                                className="bg-gray-100 p-2 rounded-lg shadow border-l-4 border-gray-500"
-                            >
-                                <div className="flex justify-between items-center">
-                                    <div>
-                                        <h3 className="font-semibold">
-                                            Lions vs {game.opposition_name}
-                                        </h3>
-                                        <p className="text-sm text-gray-600">
-                                            {new Date(game.match_date).toLocaleDateString()} • {game.game_type_display}
-                                        </p>
+            {
+                completedGames.length > 0 && (
+                    <div className="mb-8">
+                        <h2 className="text-2xl font-bold mb-4">✅ Completed ({completedGames.length})</h2>
+                        <div className="space-y-3">
+                            {completedGames.map((game) => (
+                                <div
+                                    key={game.id}
+                                    className="bg-gray-100 p-2 rounded-lg shadow border-l-4 border-gray-500"
+                                >
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <h3 className="font-semibold">
+                                                Lions vs {game.opposition_name}
+                                            </h3>
+                                            <p className="text-sm text-gray-600">
+                                                {new Date(game.match_date).toLocaleDateString()} • {game.game_type_display}
+                                            </p>
+                                        </div>
+                                        <div className="text-2xl font-bold">{game.score_for} - {game.score_against}</div>
+                                        <button
+                                            onClick={() => handleUpdateGameStatus(game.id, "in-progress")}
+                                            className="text-blue-600 hover:text-blue-900 text-sm"
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteGame(game.id)}
+                                            className="text-red-600 hover:text-red-900 text-sm"
+                                        >
+                                            Delete
+                                        </button>
                                     </div>
-                                    <div className="text-2xl font-bold">{game.score_for} - {game.score_against}</div>
-                                    <button
-                                        onClick={() => handleUpdateGameStatus(game.id, "in-progress")}
-                                        className="text-blue-600 hover:text-blue-900 text-sm"
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        onClick={() => handleDeleteGame(game.id)}
-                                        className="text-red-600 hover:text-red-900 text-sm"
-                                    >
-                                        Delete
-                                    </button>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
-            {games.length === 0 && (
-                <div className="bg-gray-100 p-6 rounded-lg text-center text-gray-600">
-                    <p className="text-lg">No games yet. Create one above to get started!</p>
-                </div>
-            )}
-        </div>
+            {
+                games.length === 0 && (
+                    <div className="bg-gray-100 p-6 rounded-lg text-center text-gray-600">
+                        <p className="text-lg">No games yet. Create one above to get started!</p>
+                    </div>
+                )
+            }
+        </div >
     );
 }

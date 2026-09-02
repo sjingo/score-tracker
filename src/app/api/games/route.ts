@@ -42,7 +42,7 @@ export async function GET() {
 
     console.log(`[GET /api/games] Retrieved ${gamesResult.rows.length} games`);
 
-    // Enrich each game with scorers
+    // Enrich each game with scorers and assists
     const enrichedGames = await Promise.all(
       //@ts-expect-error TODO: type EnrichedGame
       gamesResult.rows.map(async (game: EnrichedGame[]) => {
@@ -56,9 +56,20 @@ export async function GET() {
           [game.id],
         );
 
+        const assistsResult = await db.execute(
+          `SELECT ga.*, p.anonymised_id
+          FROM game_assists ga
+          LEFT JOIN players p ON ga.player_id = p.id
+          WHERE ga.game_id = ?
+          ORDER BY ga.assist_count DESC`,
+          // @ts-expect-error TODO: type EnrichedGame
+          [game.id],
+        );
+
         return {
           ...game,
           scorers: scorersResult.rows || [],
+          assists: assistsResult.rows || [],
         };
       }),
     );

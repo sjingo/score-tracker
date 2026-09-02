@@ -12,6 +12,7 @@ export interface Game {
   game_type_color?: string;
   location?: string;
   scorers?: Scorer[];
+  assists?: Assist[];
 }
 
 export interface Scorer {
@@ -19,6 +20,14 @@ export interface Scorer {
   player_id: string;
   player_name: string;
   goal_count: number;
+  anonymised_id?: string;
+}
+
+export interface Assist {
+  id: string;
+  player_id: string;
+  player_name: string;
+  assist_count: number;
   anonymised_id?: string;
 }
 
