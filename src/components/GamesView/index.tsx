@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Game, Player, GameType, OPPOSITION_GOAL, Assist } from './types'
-import { PlusIcon } from "@/icons/plus";
-import { Mina } from "next/font/google";
-import { MinusIcon } from "@/icons/minus";
+import { Game, Player, GameType, OPPOSITION_GOAL } from '../types'
+import { useGameGoalMutation } from "@/app/api/games/hooks/useGameGoalMutation";
+import { useGameAssistMutation } from "@/app/api/games/hooks/useGameAssistMutation";
+import ScorersPanel from "./ScorersPanel";
+import AssistsPanel from "./AssistsPanel";
 
 
 
@@ -26,14 +27,14 @@ export default function GamesView() {
 
     const [selectedGame, setSelectedGame] = useState<string | null>(null);
     const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
-    const [goalCount, setGoalCount] = useState(1);
     const [scoringError, setError2] = useState<string | null>(null);
 
     // Assist tracking states
     const [selectedAssistGame, setSelectedAssistGame] = useState<string | null>(null);
     const [selectedAssistPlayer, setSelectedAssistPlayer] = useState<string | null>(null);
-    const [assistCount, setAssistCount] = useState(1);
     const [assistError, setAssistError] = useState<string | null>(null);
+    const gameGoalMutation = useGameGoalMutation({ games, setGames });
+    const gameAssistMutation = useGameAssistMutation({ games, setGames });
 
     // Fetch initial data
     useEffect(() => {
@@ -96,123 +97,139 @@ export default function GamesView() {
         }
     };
 
-    const handleRecordGoal = async (gameId: string, goalCount: number) => {
-
-        if (selectedPlayer === OPPOSITION_GOAL) {
-            try {
-                const res = await fetch(`/api/games/${gameId}/opposition-goal`, {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        goalCount: goalCount,
-                    }),
-
-                });
-                const result = await res.json();
-
-                if (result.success) {
-                    // Refresh the games list to get updated scores
-                    const gamesRes = await fetch("/api/games");
-                    const gamesData = await gamesRes.json();
-                    setGames(gamesData.data || []);
-                    setSelectedPlayer(null);
-                    setGoalCount(goalCount);
-                    setError2(null);
-                } else {
-                    console.error("[GamesView] Failed to record opposition goal:", result.error);
-                    setError2(result.error);
-                }
-            } catch (err) {
-                console.error("[GamesView] Record opposition goal error:", err);
-                setError2(String(err));
-            }
-            return;
-        }
-
-
-        if (!selectedPlayer) {
+    const handleRecordGoal = async (
+        gameId: string,
+        goalCount: number,
+        playerId?: string,
+    ) => {
+        const scorerId = playerId || selectedPlayer;
+        if (!scorerId) {
             console.warn("[GamesView] No player selected");
             setError2("Please select a player");
             return;
         }
 
         try {
-            const player = players.find((p) => p.id === selectedPlayer);
-            if (!player) {
+            const isOppositionGoal = scorerId === OPPOSITION_GOAL;
+            const player = isOppositionGoal
+                ? undefined
+                : players.find((p) => p.id === scorerId);
+
+            if (!isOppositionGoal && !player) {
                 console.warn("[GamesView] Player not found");
                 setError2("Player not found");
                 return;
             }
 
-            const res = await fetch(`/api/games/${gameId}/scores`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    playerId: selectedPlayer,
-                    playerName: player.name,
-                    playerNumber: player.jersey_number,
-                    goalCount: goalCount,
-                }),
+            const goal = await gameGoalMutation.mutateAsync({
+                gameId,
+                goalCount,
+                player,
+                isOppositionGoal,
             });
 
-            const result = await res.json();
+            setGames((currentGames) =>
+                currentGames.map((game) => {
+                    if (game.id !== gameId) return game;
 
-            if (result.success) {
-                const gamesRes = await fetch("/api/games");
-                const gamesData = await gamesRes.json();
-                setGames(gamesData.data || []);
-                setSelectedPlayer(null);
-                setGoalCount(1);
-                setError2(null);
-            } else {
-                console.error("[GamesView] Failed to record goal:", result.error);
-                setError2(result.error);
-            }
+                    if (goal.type === "opposition") {
+                        return { ...game, score_against: goal.score_against };
+                    }
+
+                    const scorers = game.scorers || [];
+                    const updatedScorers = goal.goal_count === 0
+                        ? scorers.filter((item) => item.player_id !== goal.player_id)
+                        : scorers.some((item) => item.player_id === goal.player_id)
+                            ? scorers.map((item) =>
+                                item.player_id === goal.player_id
+                                    ? { ...item, id: goal.id, goal_count: goal.goal_count }
+                                    : item,
+                            )
+                            : [
+                                ...scorers,
+                                {
+                                    id: goal.id,
+                                    player_id: goal.player_id,
+                                    player_name: goal.player_name,
+                                    goal_count: goal.goal_count,
+                                    anonymised_id: player?.anonymised_id,
+                                },
+                            ];
+
+                    return {
+                        ...game,
+                        score_for: goal.game_score_for,
+                        scorers: updatedScorers,
+                    };
+                }),
+            );
+            setSelectedPlayer(null);
+            setError2(null);
         } catch (err) {
             console.error("[GamesView] Record goal error:", err);
             setError2(String(err));
         }
     };
 
-    const handleRecordAssist = async (gameId: string, assistCount: number) => {
-        if (!selectedAssistPlayer) {
+    const handleRecordAssist = async (
+        gameId: string,
+        assistCount: number,
+        playerId?: string,
+    ) => {
+        const assistPlayerId = playerId || selectedAssistPlayer;
+        if (!assistPlayerId) {
             console.warn("[GamesView] No assist player selected");
             setAssistError("Please select a player");
             return;
         }
 
         try {
-            const player = players.find((p) => p.id === selectedAssistPlayer);
+            const player = players.find((p) => p.id === assistPlayerId);
             if (!player) {
                 console.warn("[GamesView] Assist player not found");
                 setAssistError("Player not found");
                 return;
             }
 
-            const res = await fetch(`/api/games/${gameId}/assists`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    playerId: selectedAssistPlayer,
-                    playerName: player.name,
-                    playerNumber: player.jersey_number,
-                    assistCount: assistCount,
-                }),
+            const assist = await gameAssistMutation.mutateAsync({
+                gameId,
+                assistCount,
+                player,
             });
 
-            const result = await res.json();
+            setGames((currentGames) =>
+                currentGames.map((game) => {
+                    if (game.id !== gameId) return game;
 
-            if (result.success) {
-                const gamesRes = await fetch("/api/games");
-                const gamesData = await gamesRes.json();
-                setGames(gamesData.data || []);
-                setSelectedAssistPlayer(null);
-                setAssistCount(1);
-                setAssistError(null);
-            } else {
-                console.error("[GamesView] Failed to record assist:", result.error);
-                setAssistError(result.error);
-            }
+                    const assists = game.assists || [];
+                    const updatedAssists = assist.assist_count === 0
+                        ? assists.filter((item) => item.player_id !== assist.player_id)
+                        : assists.some((item) => item.player_id === assist.player_id)
+                            ? assists.map((item) =>
+                                item.player_id === assist.player_id
+                                    ? {
+                                        ...item,
+                                        id: assist.id,
+                                        assist_count: assist.assist_count,
+                                    }
+                                    : item,
+                            )
+                            : [
+                                ...assists,
+                                {
+                                    id: assist.id,
+                                    player_id: assist.player_id,
+                                    player_name: assist.player_name,
+                                    assist_count: assist.assist_count,
+                                    anonymised_id: player.anonymised_id,
+                                },
+                            ];
+
+                    return { ...game, assists: updatedAssists };
+                }),
+            );
+            setSelectedAssistPlayer(null);
+            setAssistError(null);
         } catch (err) {
             console.error("[GamesView] Record assist error:", err);
             setAssistError(String(err));
@@ -436,7 +453,7 @@ export default function GamesView() {
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
                                         <h3 className="text-2xl font-bold">
-                                            🦁 Lions vs {game.opposition_name}
+                                            Lions vs {game.opposition_name}
                                         </h3>
                                         <p className="text-sm text-gray-600">
                                             {new Date(game.match_date).toLocaleDateString()} •{" "}
@@ -474,157 +491,33 @@ export default function GamesView() {
                                     </div>
                                 </div>
 
-                                {/* Scorers List */}
-                                <div className="mb-4">
-                                    <h4 className="font-semibold mb-2">Scorers:</h4>
-                                    {game.scorers && game.scorers.length > 0 ? (
-                                        <div className="space-y-2">
-                                            {game.scorers.map((scorer) => (
-                                                <div
-                                                    key={scorer.id}
-                                                    className="flex justify-between items-center bg-gray-100 p-3 rounded"
-                                                >
-                                                    <span>
-                                                        {scorer.player_name}{" "}
-                                                        <span className="text-gray-500 text-sm">
-                                                            ({scorer.anonymised_id})
-                                                        </span>
-                                                    </span>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="font-bold bg-blue-500 text-white px-3 py-1 rounded">
-                                                            {scorer.goal_count}
-                                                        </span>
-                                                        <button
-                                                            onClick={() =>
-                                                                handleDeleteScorer(game.id, scorer.id)
-                                                            }
-                                                            className="text-red-600 hover:text-red-900 text-sm"
-                                                        >
-                                                            Remove
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <p className="text-gray-500 italic">No scorers yet</p>
-                                    )}
-                                </div>
+                                <ScorersPanel
+                                    game={game}
+                                    activePlayers={activePlayers}
+                                    selectedGame={selectedGame}
+                                    selectedPlayer={selectedPlayer}
+                                    scoringError={scoringError}
+                                    onSelectPlayer={(gameId, playerId) => {
+                                        setSelectedGame(gameId);
+                                        setSelectedPlayer(playerId);
+                                    }}
+                                    onRecordGoal={handleRecordGoal}
+                                    onDeleteScorer={handleDeleteScorer}
+                                />
 
-                                {/* Record Goal Form */}
-                                <div className="bg-gray-50 p-2 rounded mb-4">
-                                    <h4 className="font-semibold mb-3">⚽ Record Goal:</h4>
-                                    {scoringError && (
-                                        <div className="bg-red-100 text-red-700 p-2 rounded mb-2 text-sm">
-                                            {scoringError}
-                                        </div>
-                                    )}
-                                    <div className="flex gap-2">
-                                        <select
-                                            value={selectedGame === game.id ? selectedPlayer || "" : ""}
-                                            onChange={(e) => {
-                                                setSelectedGame(game.id);
-                                                setSelectedPlayer(e.target.value);
-                                            }}
-                                            className="basis-1/2 border p-2 rounded bg-white"
-                                        >
-                                            <option value="">Select player...</option>
-                                            {activePlayers.map((player) => {
-
-                                                return (
-                                                    <option key={player.id} value={player.id}>
-                                                        {player.name}
-                                                        {player.jersey_number ? ` (#${player.jersey_number})` : ""}
-                                                    </option>
-                                                )
-                                            })}
-                                        </select>
-                                        <div className="flex items-center gap-2 basis-1/2">
-                                            <PlusIcon className="w-10 h-10 text-blue-600"
-                                                onClick={() => handleRecordGoal(game.id, 1)}
-                                            />
-                                            <MinusIcon className="w-10 h-10 text-red-600"
-                                                onClick={() => handleRecordGoal(game.id, -1)}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Assists List */}
-                                <div className="mb-4">
-                                    <h4 className="font-semibold mb-2">Assists:</h4>
-                                    {game.assists && game.assists.length > 0 ? (
-                                        <div className="space-y-2">
-                                            {game.assists.map((assist) => (
-                                                <div
-                                                    key={assist.id}
-                                                    className="flex justify-between items-center bg-purple-100 p-3 rounded"
-                                                >
-                                                    <span>
-                                                        {assist.player_name}{" "}
-                                                        <span className="text-gray-500 text-sm">
-                                                            ({assist.anonymised_id})
-                                                        </span>
-                                                    </span>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="font-bold bg-purple-500 text-white px-3 py-1 rounded">
-                                                            {assist.assist_count}
-                                                        </span>
-                                                        <button
-                                                            onClick={() =>
-                                                                handleDeleteAssist(game.id, assist.id)
-                                                            }
-                                                            className="text-red-600 hover:text-red-900 text-sm"
-                                                        >
-                                                            Remove
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <p className="text-gray-500 italic">No assists yet</p>
-                                    )}
-                                </div>
-
-                                {/* Record Assist Form */}
-                                <div className="bg-purple-50 p-2 rounded">
-                                    <h4 className="font-semibold mb-3">🎯 Record Assist:</h4>
-                                    {assistError && (
-                                        <div className="bg-red-100 text-red-700 p-2 rounded mb-2 text-sm">
-                                            {assistError}
-                                        </div>
-                                    )}
-                                    <div className="flex gap-2">
-                                        <select
-                                            value={selectedAssistGame === game.id ? selectedAssistPlayer || "" : ""}
-                                            onChange={(e) => {
-                                                setSelectedAssistGame(game.id);
-                                                setSelectedAssistPlayer(e.target.value);
-                                            }}
-                                            className="basis-1/2 border p-2 rounded bg-white"
-                                        >
-                                            <option value="">Select player...</option>
-                                            {activePlayers.map((player) => {
-                                                if (player.id === OPPOSITION_GOAL) return null;
-                                                return (
-                                                    <option key={player.id} value={player.id}>
-                                                        {player.name}
-                                                        {player.jersey_number ? ` (#${player.jersey_number})` : ""}
-                                                    </option>
-                                                )
-                                            })}
-                                        </select>
-                                        <div className="flex items-center gap-2 basis-1/2">
-                                            <PlusIcon className="w-10 h-10 text-purple-600"
-                                                onClick={() => handleRecordAssist(game.id, 1)}
-                                            />
-                                            <MinusIcon className="w-10 h-10 text-red-600"
-                                                onClick={() => handleRecordAssist(game.id, -1)}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
+                                <AssistsPanel
+                                    game={game}
+                                    activePlayers={activePlayers.filter((player) => player.id !== OPPOSITION_GOAL)}
+                                    selectedGame={selectedAssistGame}
+                                    selectedPlayer={selectedAssistPlayer}
+                                    assistError={assistError}
+                                    onSelectPlayer={(gameId, playerId) => {
+                                        setSelectedAssistGame(gameId);
+                                        setSelectedAssistPlayer(playerId);
+                                    }}
+                                    onRecordAssist={handleRecordAssist}
+                                    onDeleteAssist={handleDeleteAssist}
+                                />
 
                                 {/* Delete Game Button */}
                                 <div className="mt-4 flex justify-end" >

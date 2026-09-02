@@ -47,14 +47,17 @@ export async function PATCH(
     );
 
     // Update the game with the new score
-    const updatedGame = await db.execute({
+    await db.execute({
       sql: "UPDATE games SET score_against = ? WHERE id = ?",
       args: [updatedScoreAgainst, gameId],
     });
 
     return NextResponse.json({
       success: true,
-      data: updatedGame,
+      data: {
+        game_id: gameId,
+        score_against: updatedScoreAgainst,
+      },
     });
   } catch (error) {
     console.error("Error updating score against:", error);

@@ -14,7 +14,7 @@ export default function Home() {
       <header className="bg-white shadow">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-start">
           <div>
-            <h1 className="text-4xl font-bold text-blue-600">🦁 Lions Score Tracker</h1>
+            <h1 className="text-4xl font-bold text-blue-600">Lions Score Tracker</h1>
             <p className="text-gray-600">Under-9 Football Team - Phase 2 API</p>
           </div>
           {/* <Link
