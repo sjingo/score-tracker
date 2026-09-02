@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Game, Player, GameType, OPPOSITION_GOAL } from './types'
+import { Game, Player, GameType, OPPOSITION_GOAL, Assist } from './types'
 import { PlusIcon } from "@/icons/plus";
 import { Mina } from "next/font/google";
 import { MinusIcon } from "@/icons/minus";
@@ -28,6 +28,12 @@ export default function GamesView() {
     const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
     const [goalCount, setGoalCount] = useState(1);
     const [scoringError, setError2] = useState<string | null>(null);
+
+    // Assist tracking states
+    const [selectedAssistGame, setSelectedAssistGame] = useState<string | null>(null);
+    const [selectedAssistPlayer, setSelectedAssistPlayer] = useState<string | null>(null);
+    const [assistCount, setAssistCount] = useState(1);
+    const [assistError, setAssistError] = useState<string | null>(null);
 
     // Fetch initial data
     useEffect(() => {
@@ -168,9 +174,83 @@ export default function GamesView() {
         }
     };
 
-    const handleDeleteScorer = async (gameId: string, scorerId: string) => {
+    const handleRecordAssist = async (gameId: string, assistCount: number) => {
+        if (!selectedAssistPlayer) {
+            console.warn("[GamesView] No assist player selected");
+            setAssistError("Please select a player");
+            return;
+        }
 
-        if (!window.confirm("Are you sure you want to delete this game?")) {
+        try {
+            const player = players.find((p) => p.id === selectedAssistPlayer);
+            if (!player) {
+                console.warn("[GamesView] Assist player not found");
+                setAssistError("Player not found");
+                return;
+            }
+
+            const res = await fetch(`/api/games/${gameId}/assists`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    playerId: selectedAssistPlayer,
+                    playerName: player.name,
+                    playerNumber: player.jersey_number,
+                    assistCount: assistCount,
+                }),
+            });
+
+            const result = await res.json();
+
+            if (result.success) {
+                const gamesRes = await fetch("/api/games");
+                const gamesData = await gamesRes.json();
+                setGames(gamesData.data || []);
+                setSelectedAssistPlayer(null);
+                setAssistCount(1);
+                setAssistError(null);
+            } else {
+                console.error("[GamesView] Failed to record assist:", result.error);
+                setAssistError(result.error);
+            }
+        } catch (err) {
+            console.error("[GamesView] Record assist error:", err);
+            setAssistError(String(err));
+        }
+    };
+
+    const handleDeleteAssist = async (gameId: string, assistId: string) => {
+        if (!window.confirm("Are you sure you want to remove this assist?")) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/games/${gameId}/assists`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ assistId }),
+            });
+
+            const result = await res.json();
+
+            if (result.success) {
+                console.log("[GamesView] Assist deleted:", result.data);
+                // Refresh the games list
+                const gamesRes = await fetch("/api/games");
+                const gamesData = await gamesRes.json();
+                setGames(gamesData.data || []);
+            } else {
+                console.error("[GamesView] Failed to delete assist:", result.error);
+                setAssistError(result.error);
+            }
+        } catch (err) {
+            console.error("[GamesView] Delete assist error:", err);
+            setAssistError(String(err));
+        }
+    };
+
+    const handleDeleteScorer = async (gameId: string, scorerId: string) => {
+        if (!window.confirm("Are you sure you want to delete this scorer?")) {
             return;
         }
 
@@ -196,8 +276,8 @@ export default function GamesView() {
         } catch (err) {
             console.error("[GamesView] Delete scorer error:", err);
             setError2(String(err));
-        }
-    };
+        };
+    }
 
     const handleDeleteGame = async (gameId: string) => {
         console.log(`[GamesView] Deleting game ${gameId}`);
@@ -252,6 +332,7 @@ export default function GamesView() {
             setError(String(err));
         }
     };
+
     console.log('selectedGame', selectedGame)
     const activeGames = games.filter((g) => g.status === "in-progress");
     const completedGames = games.filter((g) => g.status === "completed");
@@ -431,7 +512,7 @@ export default function GamesView() {
                                 </div>
 
                                 {/* Record Goal Form */}
-                                <div className="bg-gray-50 p-2 rounded">
+                                <div className="bg-gray-50 p-2 rounded mb-4">
                                     <h4 className="font-semibold mb-3">⚽ Record Goal:</h4>
                                     {scoringError && (
                                         <div className="bg-red-100 text-red-700 p-2 rounded mb-2 text-sm">
@@ -464,6 +545,82 @@ export default function GamesView() {
                                             />
                                             <MinusIcon className="w-10 h-10 text-red-600"
                                                 onClick={() => handleRecordGoal(game.id, -1)}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Assists List */}
+                                <div className="mb-4">
+                                    <h4 className="font-semibold mb-2">Assists:</h4>
+                                    {game.assists && game.assists.length > 0 ? (
+                                        <div className="space-y-2">
+                                            {game.assists.map((assist) => (
+                                                <div
+                                                    key={assist.id}
+                                                    className="flex justify-between items-center bg-purple-100 p-3 rounded"
+                                                >
+                                                    <span>
+                                                        {assist.player_name}{" "}
+                                                        <span className="text-gray-500 text-sm">
+                                                            ({assist.anonymised_id})
+                                                        </span>
+                                                    </span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-bold bg-purple-500 text-white px-3 py-1 rounded">
+                                                            {assist.assist_count}
+                                                        </span>
+                                                        <button
+                                                            onClick={() =>
+                                                                handleDeleteAssist(game.id, assist.id)
+                                                            }
+                                                            className="text-red-600 hover:text-red-900 text-sm"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-gray-500 italic">No assists yet</p>
+                                    )}
+                                </div>
+
+                                {/* Record Assist Form */}
+                                <div className="bg-purple-50 p-2 rounded">
+                                    <h4 className="font-semibold mb-3">🎯 Record Assist:</h4>
+                                    {assistError && (
+                                        <div className="bg-red-100 text-red-700 p-2 rounded mb-2 text-sm">
+                                            {assistError}
+                                        </div>
+                                    )}
+                                    <div className="flex gap-2">
+                                        <select
+                                            value={selectedAssistGame === game.id ? selectedAssistPlayer || "" : ""}
+                                            onChange={(e) => {
+                                                setSelectedAssistGame(game.id);
+                                                setSelectedAssistPlayer(e.target.value);
+                                            }}
+                                            className="basis-1/2 border p-2 rounded bg-white"
+                                        >
+                                            <option value="">Select player...</option>
+                                            {activePlayers.map((player) => {
+                                                if (player.id === OPPOSITION_GOAL) return null;
+                                                return (
+                                                    <option key={player.id} value={player.id}>
+                                                        {player.name}
+                                                        {player.jersey_number ? ` (#${player.jersey_number})` : ""}
+                                                    </option>
+                                                )
+                                            })}
+                                        </select>
+                                        <div className="flex items-center gap-2 basis-1/2">
+                                            <PlusIcon className="w-10 h-10 text-purple-600"
+                                                onClick={() => handleRecordAssist(game.id, 1)}
+                                            />
+                                            <MinusIcon className="w-10 h-10 text-red-600"
+                                                onClick={() => handleRecordAssist(game.id, -1)}
                                             />
                                         </div>
                                     </div>
