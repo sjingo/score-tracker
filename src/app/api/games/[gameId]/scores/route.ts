@@ -83,15 +83,15 @@ export async function POST(
       );
     }
 
-    if (goalCount < 1 || typeof goalCount !== "number") {
-      console.warn(
-        `[POST /api/games/:gameId/scores] Invalid goalCount: ${goalCount}`,
-      );
-      return NextResponse.json(
-        { success: false, error: "Goal count must be >= 1" },
-        { status: 400 },
-      );
-    }
+    // if (goalCount === -1  || typeof goalCount !== "number") {
+    //   console.warn(
+    //     `[POST /api/games/:gameId/scores] Invalid goalCount: ${goalCount}`,
+    //   );
+    //   return NextResponse.json(
+    //     { success: false, error: "Goal count must be >= 1" },
+    //     { status: 400 },
+    //   );
+    // }
 
     // Check game exists and is not completed
     const gameResult = await db.execute(
