@@ -8,20 +8,17 @@ import { redirect } from "next/navigation";
 export function AuthStatus() {
     const { data: session } = useSession();
 
-    if (!session) {
+
+    if (!session || !session.user) {
         return (
-            <div className="flex gap-2">
-                <Link href="/login">
-                    <Button>Sign In</Button>
-                </Link>
-            </div>
+            null
         );
     }
 
     return (
         <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">
-                Welcome, {session.user.name || session.user.email}
+                Welcome, {session && session.user.name || session && session.user.email}
             </span>
             <button
                 onClick={async () => {

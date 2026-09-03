@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthStatus } from "@/components/AuthStatus";
+import { Header } from "@/components/Header";
 import { QueryProvider } from "@/components/QueryProvider";
 
 const geistSans = Geist({
@@ -27,17 +27,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="min-h-full flex flex-col">
         <QueryProvider>
-          <header className="bg-white shadow">
-            <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-              <h1 className="text-2xl font-bold text-blue-600">Lions Score Tracker</h1>
-              <AuthStatus />
-            </nav>
-          </header>
-          <main className="flex-1">
+
+          <Header />
+          <main className="flex-1 mt-[100px]">
             {children}
           </main>
         </QueryProvider>
       </body>
-    </html>
+    </html >
   );
 }
