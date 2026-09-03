@@ -103,6 +103,7 @@ export async function POST(request: NextRequest) {
 
     const {
       oppositionName,
+      oppositionTeamId,
       gameTypeId,
       matchDate,
       venue,
@@ -130,6 +131,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!oppositionTeamId) {
+      return NextResponse.json(
+        { success: false, error: "Opposition team is required" },
+        { status: 400 },
+      );
+    }
+
     // Get Lions team ID
     const teamsResult = await db.execute(
       "SELECT id FROM teams WHERE team_name = 'Lions'",
@@ -145,6 +153,20 @@ export async function POST(request: NextRequest) {
 
     const lionsTeamId = teamsResult.rows[0].id;
     console.log(`[POST /api/games] Lions team ID: ${lionsTeamId}`);
+
+    const oppositionTeamResult = await db.execute(
+      "SELECT id, team_name FROM teams WHERE id = ? AND id <> ?",
+      [oppositionTeamId, lionsTeamId],
+    );
+
+    if (oppositionTeamResult.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Invalid opposition team" },
+        { status: 400 },
+      );
+    }
+
+    const oppositionTeam = oppositionTeamResult.rows[0];
 
     // Validate game_type_id exists and belongs to Lions
     const gameTypeResult = await db.execute(
@@ -174,12 +196,13 @@ export async function POST(request: NextRequest) {
 
     // Insert game
     await db.execute(
-      `INSERT INTO games (id, team_id, opposition_name, game_type_id, tournament_name, location, score_for, score_against, match_date, status, venue, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO games (id, team_id, opposition_team_id, opposition_name, game_type_id, tournament_name, location, score_for, score_against, match_date, status, venue, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         gameId,
         lionsTeamId,
-        oppositionName.trim(),
+        oppositionTeamId,
+        oppositionTeam.team_name,
         gameTypeId,
         tournamentName || null,
         location || null,
@@ -200,7 +223,8 @@ export async function POST(request: NextRequest) {
         data: {
           id: gameId,
           team_id: lionsTeamId,
-          opposition_name: oppositionName.trim(),
+          opposition_team_id: oppositionTeamId,
+          opposition_name: oppositionTeam.team_name,
           game_type_id: gameTypeId,
           game_type_display: gameType.display_name,
           game_type_color: gameType.color,

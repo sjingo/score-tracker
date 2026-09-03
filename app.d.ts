@@ -24,6 +24,7 @@ interface game_types {
 interface games {
   id: string;
   team_id: string;
+  opposition_team_id: string;
   opposition_name: string;
   game_type_id: string;
   tournament_name: string;

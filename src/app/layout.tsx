@@ -17,6 +17,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Lions Score Tracker",
   description: "Track scores and manage your Lions team",
+  robots: {
+    index: false,
+    follow: false,
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
