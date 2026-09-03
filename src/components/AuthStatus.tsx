@@ -18,7 +18,7 @@ export function AuthStatus() {
     return (
         <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">
-                Welcome, {session && session.user.name || session && session.user.email}
+                Welcome, {session && session.user.email}
             </span>
             <button
                 onClick={async () => {
@@ -26,7 +26,7 @@ export function AuthStatus() {
                     // window.location.href = "/";
                     redirect("/login");
                 }}
-                className="px-3 py-2 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                className="px-2 py-1 text-xs bg-red-300 text-white rounded hover:bg-red-500 transition-colors"
             >
                 Sign Out
             </button>

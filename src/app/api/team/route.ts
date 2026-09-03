@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 // GET Lions team info
 export async function GET() {
   try {
-    const result = await db.execute(
+    const result = await db().execute(
       "SELECT * FROM teams WHERE team_name = 'Lions'",
     );
 

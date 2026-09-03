@@ -16,7 +16,7 @@ export async function GET(
 
   try {
     // Fetch game to verify it exists
-    const gameResult = await db.execute(
+    const gameResult = await db().execute(
       "SELECT id, status FROM games WHERE id = ?",
       [gameId],
     );
@@ -30,7 +30,7 @@ export async function GET(
     }
 
     // Fetch scorers ordered by goal count
-    const scorersResult = await db.execute(
+    const scorersResult = await db().execute(
       `SELECT gs.*, p.name as player_name_full, p.anonymised_id, p.is_active
        FROM game_scorers gs
        LEFT JOIN players p ON gs.player_id = p.id
@@ -98,7 +98,7 @@ export async function POST(
     }
 
     // Check game exists and is not completed
-    const gameResult = await db.execute(
+    const gameResult = await db().execute(
       "SELECT id, status, opposition_name FROM games WHERE id = ?",
       [gameId],
     );
@@ -126,7 +126,7 @@ export async function POST(
     }
 
     // Check player exists and is active
-    const playerResult = await db.execute(
+    const playerResult = await db().execute(
       "SELECT id, name, is_active FROM players WHERE id = ?",
       [playerId],
     );
@@ -158,7 +158,7 @@ export async function POST(
     );
 
     // Check if player already has goals in this game
-    const existingResult = await db.execute(
+    const existingResult = await db().execute(
       "SELECT id, goal_count FROM game_scorers WHERE game_id = ? AND player_id = ?",
       [gameId, playerId],
     );
@@ -168,7 +168,7 @@ export async function POST(
         ? Number(existingResult.rows[0].goal_count)
         : 0;
 
-    const currentTeamGoalsResult = await db.execute(
+    const currentTeamGoalsResult = await db().execute(
       "SELECT COALESCE(SUM(goal_count), 0) as total_goals FROM game_scorers WHERE game_id = ?",
       [gameId],
     );
@@ -206,7 +206,7 @@ export async function POST(
         `[POST /api/games/:gameId/scores] Updating existing scorer: ${existing.goal_count} -> ${newGoalCount}`,
       );
 
-      await db.execute("UPDATE game_scorers SET goal_count = ? WHERE id = ?", [
+      await db().execute("UPDATE game_scorers SET goal_count = ? WHERE id = ?", [
         newGoalCount,
         scorerId,
       ]);
@@ -219,7 +219,7 @@ export async function POST(
         `[POST /api/games/:gameId/scores] Creating new scorer entry with ${goalCount} goal(s)`,
       );
 
-      await db.execute(
+      await db().execute(
         `INSERT INTO game_scorers (id, game_id, player_id, player_name, player_number, goal_count)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [
@@ -234,7 +234,7 @@ export async function POST(
     }
 
     // Calculate total goals from all scorers for this game
-    const totalScoresResult = await db.execute(
+    const totalScoresResult = await db().execute(
       "SELECT SUM(goal_count) as total_goals FROM game_scorers WHERE game_id = ?",
       [gameId],
     );
@@ -242,7 +242,7 @@ export async function POST(
     const totalGoals = totalScoresResult.rows[0].total_goals || 0;
 
     // Update game score_for
-    await db.execute("UPDATE games SET score_for = ? WHERE id = ?", [
+    await db().execute("UPDATE games SET score_for = ? WHERE id = ?", [
       totalGoals,
       gameId,
     ]);
@@ -313,7 +313,7 @@ export async function PATCH(
     }
 
     // Check game is not completed
-    const gameResult = await db.execute(
+    const gameResult = await db().execute(
       "SELECT status FROM games WHERE id = ?",
       [gameId],
     );
@@ -339,7 +339,7 @@ export async function PATCH(
     }
 
     // Check scorer exists
-    const scorerResult = await db.execute(
+    const scorerResult = await db().execute(
       "SELECT goal_count FROM game_scorers WHERE id = ? AND game_id = ?",
       [scorerId, gameId],
     );
@@ -364,17 +364,17 @@ export async function PATCH(
       console.log(
         `[PATCH /api/games/:gameId/scores] Deleting scorer (goal count = 0)`,
       );
-      await db.execute("DELETE FROM game_scorers WHERE id = ?", [scorerId]);
+      await db().execute("DELETE FROM game_scorers WHERE id = ?", [scorerId]);
     } else {
       // Update goal count
-      await db.execute("UPDATE game_scorers SET goal_count = ? WHERE id = ?", [
+      await db().execute("UPDATE game_scorers SET goal_count = ? WHERE id = ?", [
         newGoalCount,
         scorerId,
       ]);
     }
 
     // Recalculate total goals for this game
-    const totalScoresResult = await db.execute(
+    const totalScoresResult = await db().execute(
       "SELECT SUM(goal_count) as total_goals FROM game_scorers WHERE game_id = ?",
       [gameId],
     );
@@ -382,7 +382,7 @@ export async function PATCH(
     const totalGoals = totalScoresResult.rows[0].total_goals || 0;
 
     // Update game score_for
-    await db.execute("UPDATE games SET score_for = ? WHERE id = ?", [
+    await db().execute("UPDATE games SET score_for = ? WHERE id = ?", [
       totalGoals,
       gameId,
     ]);
@@ -435,7 +435,7 @@ export async function DELETE(
     }
 
     // Check game is not completed
-    const gameResult = await db.execute(
+    const gameResult = await db().execute(
       "SELECT status FROM games WHERE id = ?",
       [gameId],
     );
@@ -461,7 +461,7 @@ export async function DELETE(
     }
 
     // Check scorer exists and get goal count
-    const scorerResult = await db.execute(
+    const scorerResult = await db().execute(
       "SELECT goal_count, player_name FROM game_scorers WHERE id = ? AND game_id = ?",
       [scorerId, gameId],
     );
@@ -484,10 +484,10 @@ export async function DELETE(
       `[DELETE /api/games/:gameId/scores] Deleting scorer: ${playerName} (${deletedGoals} goals)`,
     );
 
-    await db.execute("DELETE FROM game_scorers WHERE id = ?", [scorerId]);
+    await db().execute("DELETE FROM game_scorers WHERE id = ?", [scorerId]);
 
     // Recalculate total goals for this game
-    const totalScoresResult = await db.execute(
+    const totalScoresResult = await db().execute(
       "SELECT SUM(goal_count) as total_goals FROM game_scorers WHERE game_id = ?",
       [gameId],
     );
@@ -495,7 +495,7 @@ export async function DELETE(
     const totalGoals = totalScoresResult.rows[0].total_goals || 0;
 
     // Update game score_for
-    await db.execute("UPDATE games SET score_for = ? WHERE id = ?", [
+    await db().execute("UPDATE games SET score_for = ? WHERE id = ?", [
       totalGoals,
       gameId,
     ]);

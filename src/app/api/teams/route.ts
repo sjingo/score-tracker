@@ -4,7 +4,7 @@ import { randomUUID } from "crypto";
 
 export async function GET() {
   try {
-    const result = await db.execute(
+    const result = await db().execute(
       "SELECT id, team_name FROM teams WHERE team_name <> 'Lions' ORDER BY team_name ASC",
     );
 
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const existing = await db.execute(
+    const existing = await db().execute(
       "SELECT id, team_name FROM teams WHERE lower(team_name) = lower(?)",
       [trimmedName],
     );
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     const team = { id: randomUUID(), team_name: trimmedName };
-    await db.execute("INSERT INTO teams (id, team_name) VALUES (?, ?)", [
+    await db().execute("INSERT INTO teams (id, team_name) VALUES (?, ?)", [
       team.id,
       team.team_name,
     ]);

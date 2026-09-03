@@ -1,72 +1,44 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-interface Player {
-    id: string;
-    name: string;
-    jersey_number: number | null;
-    anonymised_id: string;
-}
+import { useState } from "react";
+import { usePlayersQuery } from "@/app/api/players/hooks/usePlayersQuery";
+import { useCreatePlayerMutation } from "@/app/api/players/hooks/useCreatePlayerMutation";
 
 export default function PlayersView() {
-    const [players, setPlayers] = useState<Player[]>([]);
-    const [loading, setLoading] = useState(true);
     const [newPlayer, setNewPlayer] = useState({
         name: "",
         jerseyNumber: "",
     });
 
-    useEffect(() => {
-        const load = async () => {
-            try {
-                const res = await fetch("/api/players");
-                const data = await res.json();
-                setPlayers(data.data || []);
-            } catch (error) {
-                console.error("Error fetching players:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        load();
-    }, []);
+    const {
+        data: players = [],
+        isLoading,
+        isError,
+        error,
+    } = usePlayersQuery();
 
+    const addPlayerMutation = useCreatePlayerMutation();
 
     const handleAddPlayer = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        try {
-            const res = await fetch("/api/players", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    name: newPlayer.name,
-                    jerseyNumber: newPlayer.jerseyNumber
-                        ? parseInt(newPlayer.jerseyNumber)
-                        : null,
-                }),
-            });
-
-            if (res.ok) {
-                const result = await res.json();
-                setPlayers([...players, result.data]);
-                setNewPlayer({
-                    name: "",
-                    jerseyNumber: "",
-                });
-            }
-        } catch (error) {
-            console.error("Error adding player:", error);
-        }
+        await addPlayerMutation.mutateAsync(newPlayer, {
+            onSuccess: () => {
+                setNewPlayer({ name: "", jerseyNumber: "" });
+            },
+        });
     };
 
-    if (loading) return <div className="p-4">Loading...</div>;
+    if (isLoading) return <div className="p-4">Loading...</div>;
 
     return (
         <div className="max-w-4xl mx-auto p-4">
             <h1 className="text-3xl font-bold mb-6 sr-only">Lions Squad</h1>
-            {/* Add Player Form */}
+            {isError && (
+                <div className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-red-700">
+                    {error instanceof Error ? error.message : "Failed to load players"}
+                </div>
+            )}
+
             <div className="bg-white p-6 rounded-lg shadow-md mb-6">
                 <h2 className="text-xl font-semibold mb-4">Add Player</h2>
                 <form onSubmit={handleAddPlayer} className="space-y-4">
@@ -93,14 +65,14 @@ export default function PlayersView() {
                     </div>
                     <button
                         type="submit"
-                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                        disabled={addPlayerMutation.isPending}
+                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-60"
                     >
-                        Add Player
+                        {addPlayerMutation.isPending ? "Adding..." : "Add Player"}
                     </button>
                 </form>
             </div>
 
-            {/* Players List */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {players.length === 0 ? (
                     <p className="col-span-full text-gray-500 text-center py-6">

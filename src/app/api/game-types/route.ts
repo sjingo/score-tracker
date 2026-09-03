@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 export async function GET() {
   try {
     // Get Lions team ID
-    const teamsResult = await db.execute(
+    const teamsResult = await db().execute(
       "SELECT id FROM teams WHERE team_name = 'Lions'",
     );
 
@@ -18,7 +18,7 @@ export async function GET() {
 
     const lionsTeamId = teamsResult.rows[0].id;
 
-    const result = await db.execute(
+    const result = await db().execute(
       "SELECT * FROM game_types WHERE team_id = ? ORDER BY display_name ASC",
       [lionsTeamId],
     );
