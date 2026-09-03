@@ -102,6 +102,7 @@ CREATE TABLE game_types (
 CREATE TABLE games (
   id TEXT PRIMARY KEY,
   team_id TEXT NOT NULL,
+  opposition_team_id TEXT,
   opposition_name TEXT NOT NULL,
   game_type_id TEXT NOT NULL,
   tournament_name TEXT,
@@ -113,6 +114,7 @@ CREATE TABLE games (
   venue TEXT,
   notes TEXT,
   FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+  FOREIGN KEY (opposition_team_id) REFERENCES teams(id) ON DELETE RESTRICT,
   FOREIGN KEY (game_type_id) REFERENCES game_types(id) ON DELETE RESTRICT
 );
 
@@ -163,6 +165,7 @@ CREATE INDEX idx_players_is_active ON players(is_active);
 CREATE INDEX idx_players_jersey ON players(jersey_number);
 CREATE INDEX idx_game_types_team_id ON game_types(team_id);
 CREATE INDEX idx_games_team_id ON games(team_id);
+CREATE INDEX idx_games_opposition_team_id ON games(opposition_team_id);
 CREATE INDEX idx_games_game_type_id ON games(game_type_id);
 CREATE INDEX idx_games_team_match_date ON games(team_id, match_date);
 CREATE INDEX idx_games_team_type_date ON games(team_id, game_type_id, match_date);

@@ -3,6 +3,7 @@ export const OPPOSITION_GOAL = "Opposition goal";
 
 export interface Game {
   id: string;
+  opposition_team_id?: string;
   opposition_name: string;
   score_for: number;
   score_against: number;
@@ -14,6 +15,11 @@ export interface Game {
   location?: string;
   scorers?: Scorer[];
   assists?: Assist[];
+}
+
+export interface Team {
+  id: string;
+  team_name: string;
 }
 
 export interface Scorer {

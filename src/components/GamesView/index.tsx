@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Game, Player, GameType, OPPOSITION_GOAL } from '../types'
+import { Game, Player, GameType, Team, OPPOSITION_GOAL } from '../types'
 import { useGameGoalMutation } from "@/app/api/games/hooks/useGameGoalMutation";
 import { useGameAssistMutation } from "@/app/api/games/hooks/useGameAssistMutation";
 import ScorersPanel from "./ScorersPanel";
@@ -13,11 +13,15 @@ export default function GamesView() {
     const [games, setGames] = useState<Game[]>([]);
     const [players, setPlayers] = useState<Player[]>([]);
     const [gameTypes, setGameTypes] = useState<GameType[]>([]);
+    const [oppositionTeams, setOppositionTeams] = useState<Team[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [addingTeam, setAddingTeam] = useState(false);
+    const [newTeamName, setNewTeamName] = useState("");
 
     // Form states
     const [newGame, setNewGame] = useState({
+        oppositionTeamId: "",
         oppositionName: "",
         gameTypeId: "",
         venue: "",
@@ -40,21 +44,24 @@ export default function GamesView() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [gamesRes, playersRes, typesRes] = await Promise.all([
+                const [gamesRes, playersRes, typesRes, teamsRes] = await Promise.all([
                     fetch("/api/games"),
                     fetch("/api/players"),
                     fetch("/api/game-types"),
+                    fetch("/api/teams"),
                 ]);
 
                 const gamesData = await gamesRes.json();
                 const playersData = await playersRes.json();
                 const typesData = await typesRes.json();
+                const teamsData = await teamsRes.json();
 
 
 
                 setGames(gamesData.data || []);
                 setPlayers(playersData.data || []);
                 setGameTypes(typesData.data || []);
+                setOppositionTeams(teamsData.data || []);
             } catch (err) {
                 console.error("[GamesView] Fetch error:", err);
                 setError(String(err));
@@ -81,6 +88,7 @@ export default function GamesView() {
             if (result.success) {
                 setGames([result.data, ...games]);
                 setNewGame({
+                    oppositionTeamId: "",
                     oppositionName: "",
                     gameTypeId: "",
                     venue: "",
@@ -93,6 +101,44 @@ export default function GamesView() {
             }
         } catch (err) {
             console.error("[GamesView] Create game error:", err);
+            setError(String(err));
+        }
+    };
+
+    const handleAddTeam = async () => {
+        const teamName = newTeamName.trim();
+        if (!teamName) return;
+        if (!window.confirm(`Add "${teamName}" as a new opposition team?`)) return;
+
+        try {
+            const res = await fetch("/api/teams", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ teamName }),
+            });
+            const result = await res.json();
+
+            if (!result.success) {
+                setError(result.error);
+                return;
+            }
+
+            setOppositionTeams((teams) =>
+                teams.some((team) => team.id === result.data.id)
+                    ? teams
+                    : [...teams, result.data].sort((a, b) =>
+                        a.team_name.localeCompare(b.team_name),
+                    ),
+            );
+            setNewGame((game) => ({
+                ...game,
+                oppositionTeamId: result.data.id,
+                oppositionName: result.data.team_name,
+            }));
+            setNewTeamName("");
+            setAddingTeam(false);
+            setError(null);
+        } catch (err) {
             setError(String(err));
         }
     };
@@ -379,16 +425,53 @@ export default function GamesView() {
                 <h2 className="text-2xl font-bold mb-4">➕ Create New Game</h2>
                 <form onSubmit={handleCreateGame} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input
-                            type="text"
-                            placeholder="Opposition Name (required)"
-                            value={newGame.oppositionName}
-                            onChange={(e) =>
-                                setNewGame({ ...newGame, oppositionName: e.target.value })
-                            }
-                            required
-                            className="border p-3 rounded bg-gray-50"
-                        />
+                        <div className="space-y-2">
+                            <select
+                                value={addingTeam ? "__add_new__" : newGame.oppositionTeamId}
+                                onChange={(e) => {
+                                    if (e.target.value === "__add_new__") {
+                                        setAddingTeam(true);
+                                        setNewGame({ ...newGame, oppositionTeamId: "", oppositionName: "" });
+                                        return;
+                                    }
+                                    const team = oppositionTeams.find((item) => item.id === e.target.value);
+                                    setNewGame({
+                                        ...newGame,
+                                        oppositionTeamId: e.target.value,
+                                        oppositionName: team?.team_name || "",
+                                    });
+                                }}
+                                required
+                                className="border p-3 rounded bg-gray-50 w-full"
+                            >
+                                <option value="">Select Opposition Team (required)</option>
+                                {oppositionTeams.map((team) => (
+                                    <option key={team.id} value={team.id}>
+                                        {team.team_name}
+                                    </option>
+                                ))}
+                                <option value="__add_new__">+ Add new team</option>
+                            </select>
+                            {addingTeam && (
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        placeholder="New team name"
+                                        value={newTeamName}
+                                        onChange={(e) => setNewTeamName(e.target.value)}
+                                        className="border p-3 rounded bg-gray-50 flex-1"
+                                        autoFocus
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleAddTeam}
+                                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 font-semibold"
+                                    >
+                                        Add
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                         <select
                             value={newGame.gameTypeId}
                             onChange={(e) =>
