@@ -14,7 +14,7 @@ export async function GET(
 
   try {
     // Fetch game with game_type
-    const gameResult = await db.execute(
+    const gameResult = await db().execute(
       `SELECT g.*, gt.display_name as game_type_display, gt.color as game_type_color
        FROM games g
        JOIN game_types gt ON g.game_type_id = gt.id
@@ -33,7 +33,7 @@ export async function GET(
     const game = gameResult.rows[0];
 
     // Fetch scorers with player details
-    const scorersResult = await db.execute(
+    const scorersResult = await db().execute(
       `SELECT gs.*, p.name as player_name_full, p.anonymised_id, p.is_active
        FROM game_scorers gs
        LEFT JOIN players p ON gs.player_id = p.id
@@ -80,7 +80,7 @@ export async function PATCH(
       body;
 
     // Check game exists
-    const gameCheckResult = await db.execute(
+    const gameCheckResult = await db().execute(
       "SELECT id, status FROM games WHERE id = ?",
       [gameId],
     );
@@ -169,8 +169,8 @@ export async function PATCH(
     values.push(gameId);
 
     const query = `UPDATE games SET ${updates.join(", ")} WHERE id = ?`;
-    // await db.execute(query, values);
-    await db.execute({
+    // await db().execute(query, values);
+    await db().execute({
       sql: query,
       args: [...values, gameId],
     });
@@ -178,7 +178,7 @@ export async function PATCH(
     console.log(`[PATCH /api/games/:gameId] Game updated successfully`);
 
     // Fetch and return updated game
-    const updatedResult = await db.execute(
+    const updatedResult = await db().execute(
       `SELECT g.*, gt.display_name as game_type_display, gt.color as game_type_color
        FROM games g
        JOIN game_types gt ON g.game_type_id = gt.id
@@ -211,7 +211,7 @@ export async function DELETE(
 
   try {
     // Check game exists
-    const gameCheckResult = await db.execute(
+    const gameCheckResult = await db().execute(
       "SELECT id, opposition_name FROM games WHERE id = ?",
       [gameId],
     );
@@ -227,7 +227,7 @@ export async function DELETE(
     const deletedGame = gameCheckResult.rows[0];
 
     // Delete game (cascading delete via FK will remove game_scorers)
-    await db.execute("DELETE FROM games WHERE id = ?", [gameId]);
+    await db().execute("DELETE FROM games WHERE id = ?", [gameId]);
 
     console.log(
       `[DELETE /api/games/:gameId] Game deleted successfully: ${deletedGame.opposition_name}`,

@@ -28,7 +28,7 @@ export async function PATCH(
 
   try {
     // Fetch game to verify it exists
-    const gResult = await db.execute({
+    const gResult = await db().execute({
       sql: "SELECT score_against FROM games WHERE id = ?",
       args: [gameId],
     });
@@ -47,7 +47,7 @@ export async function PATCH(
     );
 
     // Update the game with the new score
-    await db.execute({
+    await db().execute({
       sql: "UPDATE games SET score_against = ? WHERE id = ?",
       args: [updatedScoreAgainst, gameId],
     });

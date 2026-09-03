@@ -5,7 +5,7 @@ import { randomUUID } from "crypto";
 // GET all players
 export async function GET() {
   try {
-    const result = await db.execute(
+    const result = await db().execute(
       "SELECT * FROM players WHERE is_active = 1 ORDER BY jersey_number ASC",
     );
 
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     const playerId = randomUUID();
     const anonymisedId = `lions_${jerseyNumber || randomUUID().slice(0, 8)}`;
 
-    await db.execute(
+    await db().execute(
       "INSERT INTO players (id, name, jersey_number, anonymised_id, is_active) VALUES (?, ?, ?, ?, ?)",
       [playerId, name, jerseyNumber || null, anonymisedId, 1],
     );

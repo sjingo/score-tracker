@@ -15,7 +15,7 @@ export async function GET() {
 
   try {
     // Get Lions team ID
-    const teamsResult = await db.execute(
+    const teamsResult = await db().execute(
       "SELECT id FROM teams WHERE team_name = 'Lions'",
     );
 
@@ -31,7 +31,7 @@ export async function GET() {
     console.log(`[GET /api/games] Lions team ID: ${lionsTeamId}`);
 
     // Fetch all games with game_types
-    const gamesResult = await db.execute(
+    const gamesResult = await db().execute(
       `SELECT g.*, gt.display_name as game_type_display, gt.color as game_type_color
        FROM games g
        JOIN game_types gt ON g.game_type_id = gt.id
@@ -46,7 +46,7 @@ export async function GET() {
     const enrichedGames = await Promise.all(
       //@ts-expect-error TODO: type EnrichedGame
       gamesResult.rows.map(async (game: EnrichedGame[]) => {
-        const scorersResult = await db.execute(
+        const scorersResult = await db().execute(
           `SELECT gs.*, p.anonymised_id
           FROM game_scorers gs
           LEFT JOIN players p ON gs.player_id = p.id
@@ -56,7 +56,7 @@ export async function GET() {
           [game.id],
         );
 
-        const assistsResult = await db.execute(
+        const assistsResult = await db().execute(
           `SELECT ga.*, p.anonymised_id
           FROM game_assists ga
           LEFT JOIN players p ON ga.player_id = p.id
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get Lions team ID
-    const teamsResult = await db.execute(
+    const teamsResult = await db().execute(
       "SELECT id FROM teams WHERE team_name = 'Lions'",
     );
 
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
     const lionsTeamId = teamsResult.rows[0].id;
     console.log(`[POST /api/games] Lions team ID: ${lionsTeamId}`);
 
-    const oppositionTeamResult = await db.execute(
+    const oppositionTeamResult = await db().execute(
       "SELECT id, team_name FROM teams WHERE id = ? AND id <> ?",
       [oppositionTeamId, lionsTeamId],
     );
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
     const oppositionTeam = oppositionTeamResult.rows[0];
 
     // Validate game_type_id exists and belongs to Lions
-    const gameTypeResult = await db.execute(
+    const gameTypeResult = await db().execute(
       "SELECT id, display_name, color FROM game_types WHERE id = ? AND team_id = ?",
       [gameTypeId, lionsTeamId],
     );
@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
     console.log(`[POST /api/games] Generated game ID: ${gameId}`);
 
     // Insert game
-    await db.execute(
+    await db().execute(
       `INSERT INTO games (id, team_id, opposition_team_id, opposition_name, game_type_id, tournament_name, location, score_for, score_against, match_date, status, venue, notes)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [

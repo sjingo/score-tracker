@@ -16,7 +16,7 @@ export async function GET(
 
   try {
     // Fetch game to verify it exists
-    const gameResult = await db.execute(
+    const gameResult = await db().execute(
       "SELECT id, status FROM games WHERE id = ?",
       [gameId],
     );
@@ -32,7 +32,7 @@ export async function GET(
     }
 
     // Fetch assists ordered by assist count
-    const assistsResult = await db.execute(
+    const assistsResult = await db().execute(
       `SELECT ga.*, p.name as player_name_full, p.anonymised_id, p.is_active
        FROM game_assists ga
        LEFT JOIN players p ON ga.player_id = p.id
@@ -100,7 +100,7 @@ export async function POST(
     }
 
     // Check game exists and is not completed
-    const gameResult = await db.execute(
+    const gameResult = await db().execute(
       "SELECT id, status FROM games WHERE id = ?",
       [gameId],
     );
@@ -128,7 +128,7 @@ export async function POST(
     }
 
     // Check player exists and is active
-    const playerResult = await db.execute(
+    const playerResult = await db().execute(
       "SELECT id, name, is_active FROM players WHERE id = ?",
       [playerId],
     );
@@ -160,7 +160,7 @@ export async function POST(
     );
 
     // Check if player already has assists in this game
-    const existingResult = await db.execute(
+    const existingResult = await db().execute(
       "SELECT id, assist_count FROM game_assists WHERE game_id = ? AND player_id = ?",
       [gameId, playerId],
     );
@@ -196,7 +196,7 @@ export async function POST(
         `[POST /api/games/:gameId/assists] Updating existing assist: ${existing.assist_count} -> ${newAssistCount}`,
       );
 
-      await db.execute(
+      await db().execute(
         "UPDATE game_assists SET assist_count = ? WHERE id = ?",
         [newAssistCount, assistId],
       );
@@ -209,7 +209,7 @@ export async function POST(
         `[POST /api/games/:gameId/assists] Creating new assist entry with ${assistCount} assist(s)`,
       );
 
-      await db.execute(
+      await db().execute(
         `INSERT INTO game_assists (id, game_id, player_id, player_name, player_number, assist_count)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [
@@ -288,7 +288,7 @@ export async function PATCH(
     }
 
     // Check game is not completed
-    const gameResult = await db.execute(
+    const gameResult = await db().execute(
       "SELECT status FROM games WHERE id = ?",
       [gameId],
     );
@@ -314,7 +314,7 @@ export async function PATCH(
     }
 
     // Check assist exists
-    const assistResult = await db.execute(
+    const assistResult = await db().execute(
       "SELECT assist_count FROM game_assists WHERE id = ? AND game_id = ?",
       [assistId, gameId],
     );
@@ -339,10 +339,10 @@ export async function PATCH(
       console.log(
         `[PATCH /api/games/:gameId/assists] Deleting assist (assist count = 0)`,
       );
-      await db.execute("DELETE FROM game_assists WHERE id = ?", [assistId]);
+      await db().execute("DELETE FROM game_assists WHERE id = ?", [assistId]);
     } else {
       // Update assist count
-      await db.execute(
+      await db().execute(
         "UPDATE game_assists SET assist_count = ? WHERE id = ?",
         [newAssistCount, assistId],
       );
@@ -395,7 +395,7 @@ export async function DELETE(
     }
 
     // Check game is not completed
-    const gameResult = await db.execute(
+    const gameResult = await db().execute(
       "SELECT status FROM games WHERE id = ?",
       [gameId],
     );
@@ -421,7 +421,7 @@ export async function DELETE(
     }
 
     // Check assist exists and get assist count
-    const assistResult = await db.execute(
+    const assistResult = await db().execute(
       "SELECT assist_count, player_name FROM game_assists WHERE id = ? AND game_id = ?",
       [assistId, gameId],
     );
@@ -444,7 +444,7 @@ export async function DELETE(
       `[DELETE /api/games/:gameId/assists] Deleting assist: ${playerName} (${deletedAssists} assists)`,
     );
 
-    await db.execute("DELETE FROM game_assists WHERE id = ?", [assistId]);
+    await db().execute("DELETE FROM game_assists WHERE id = ?", [assistId]);
 
     console.log(
       `[DELETE /api/games/:gameId/assists] Assist deleted successfully`,

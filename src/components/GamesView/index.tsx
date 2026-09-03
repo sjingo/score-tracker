@@ -407,8 +407,8 @@ export default function GamesView() {
         );
 
     return (
-        <div className="max-w-6xl mx-auto p-2">
-            <h1 className="text-4xl font-bold mb-2">🦁 Lions Games</h1>
+        <div className="max-w-6xl mx-auto p-1">
+            <h2 className="text-xl font-bold mb-1">Lions Games</h2>
             <p className="text-gray-600 mb-6">
                 Total: {games.length} | In Progress: {activeGames.length} | Completed:{" "}
                 {completedGames.length}
