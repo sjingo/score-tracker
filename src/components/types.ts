@@ -8,6 +8,7 @@ export interface Game {
   score_against: number;
   match_date: string;
   status: string;
+  game_type_id: string;
   game_type_display: string;
   game_type_color?: string;
   location?: string;
