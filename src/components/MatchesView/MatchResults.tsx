@@ -24,7 +24,7 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
         }
     };
 
-    const truncateScorers = (scorers: any[], maxLines: number = 2) => {
+    const truncateScorers = (scorers: Array<{ player_name?: string; anonymised_id?: string; goal_count?: number; assist_count?: number }>, maxLines: number = 2) => {
         if (!scorers || scorers.length === 0) return [];
         // Simple truncation: assume ~2 scorers per line at small font
         const maxItems = maxLines * 2;
@@ -95,7 +95,7 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                                                     {scorers.map((scorer, idx) => (
                                                         <div key={idx}>
                                                             {scorer.player_name || scorer.anonymised_id}
-                                                            {scorer.goal_count > 1 && ` (${scorer.goal_count})`}
+                                                            {scorer.goal_count !== undefined && scorer.goal_count > 1 && ` (${scorer.goal_count})`}
                                                         </div>
                                                     ))}
                                                     {hasMoreScorers && (
@@ -114,7 +114,7 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                                                     {assists.map((assist, idx) => (
                                                         <div key={idx}>
                                                             {assist.player_name || assist.anonymised_id}
-                                                            {assist.assist_count > 1 && ` (${assist.assist_count})`}
+                                                            {assist.assist_count !== undefined && assist.assist_count > 1 && ` (${assist.assist_count})`}
                                                         </div>
                                                     ))}
                                                     {hasMoreAssists && (

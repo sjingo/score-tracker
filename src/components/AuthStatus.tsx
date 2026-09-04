@@ -1,8 +1,6 @@
 "use client";
 
 import { useSession, signOut } from "@/lib/auth-client";
-import Link from "next/link";
-import { Button } from "./Button";
 import { redirect } from "next/navigation";
 
 export function AuthStatus() {

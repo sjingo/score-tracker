@@ -4,8 +4,14 @@ import { useEffect, useState, useMemo } from "react";
 import { Game, Player, GameType, Team, OPPOSITION_GOAL } from '../types'
 import { useGameGoalMutation } from "@/app/api/games/hooks/useGameGoalMutation";
 import { useGameAssistMutation } from "@/app/api/games/hooks/useGameAssistMutation";
+import { useGameDateMutation } from "@/app/api/games/hooks/useGameDateMutation";
+import { useGameTypeMutation } from "@/app/api/games/hooks/useGameTypeMutation";
+import { useGameLocationMutation } from "@/app/api/games/hooks/useGameLocationMutation";
 import ScorersPanel from "./ScorersPanel";
 import AssistsPanel from "./AssistsPanel";
+import GameDatePicker from "./GameDatePicker";
+import GameTypeSelect from "./GameTypeSelect";
+import LocationSelect from "./LocationSelect";
 
 
 
@@ -39,6 +45,9 @@ export default function GamesView() {
     const [assistError, setAssistError] = useState<string | null>(null);
     const gameGoalMutation = useGameGoalMutation({ games, setGames });
     const gameAssistMutation = useGameAssistMutation({ games, setGames });
+    const gameDateMutation = useGameDateMutation({ games, setGames });
+    const gameTypeMutation = useGameTypeMutation({ games, setGames });
+    const gameLocationMutation = useGameLocationMutation({ games, setGames });
 
     // Fetch initial data
     useEffect(() => {
@@ -535,35 +544,61 @@ export default function GamesView() {
                                 {/* Game Header */}
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
-                                        <h3 className="text-2xl font-bold">
+                                        <h3 className="text-md font-bold">
                                             Lions vs {game.opposition_name}
                                         </h3>
-                                        <p className="text-sm text-gray-600">
-                                            {new Date(game.match_date).toLocaleDateString()} •{" "}
-                                            <span
-                                                className="inline-block px-2 py-1 rounded text-white text-xs font-semibold"
-                                                style={{
-                                                    backgroundColor: game.game_type_color || "#3b82f6",
-                                                }}
-                                            >
-                                                {game.game_type_display}
-                                            </span>
-                                            {game.location && (
-                                                <span className="ml-2">
-                                                    {game.location === "home" ? "🏠" : "🚗"}{" "}
-                                                    {game.location.charAt(0).toUpperCase() + game.location.slice(1)}
-                                                </span>
-                                            )}
-                                        </p>
                                     </div>
                                     <button
                                         onClick={() => handleUpdateGameStatus(game.id, "completed")}
-                                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm"
+                                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-xs font-semibold"
                                     >
-                                        Mark Complete
+                                        Complete
                                     </button>
                                 </div>
-
+                                <div className="flex justify-between items-start mb-4">
+                                    {/* Game Metadata */}
+                                    <div className="game-meta-row text-sm text-gray-600 flex items-center gap-2 mt-1">
+                                        <GameDatePicker
+                                            date={game.match_date}
+                                            id={`game-date-${game.id}`}
+                                            name={`game-date-${game.id}`}
+                                            isPending={gameDateMutation.isPending}
+                                            onChange={(matchDate) => {
+                                                gameDateMutation.mutate({
+                                                    gameId: game.id,
+                                                    matchDate,
+                                                });
+                                            }}
+                                        />
+                                        <GameTypeSelect
+                                            gameTypeId={game.game_type_id}
+                                            gameTypes={gameTypes}
+                                            id={`game-type-${game.id}`}
+                                            isPending={gameTypeMutation.isPending}
+                                            name={`game-type-${game.id}`}
+                                            oppositionName={game.opposition_name}
+                                            onChange={(gameType) => {
+                                                gameTypeMutation.mutate({
+                                                    gameId: game.id,
+                                                    gameType,
+                                                });
+                                            }}
+                                        />
+                                        <LocationSelect
+                                            id={`game-location-${game.id}`}
+                                            isPending={gameLocationMutation.isPending}
+                                            location={game.location}
+                                            name={`game-location-${game.id}`}
+                                            oppositionName={game.opposition_name}
+                                            onChange={(location) => {
+                                                gameLocationMutation.mutate({
+                                                    gameId: game.id,
+                                                    location,
+                                                });
+                                            }}
+                                        />
+                                    </div>
+                                </div>
                                 {/* Score Display */}
                                 <div className="bg-blue-50 p-2 rounded mb-4 border-2 border-blue-200">
                                     <div className="text-center">

@@ -76,12 +76,20 @@ export async function PATCH(
     const body = await request.json();
     console.log("[PATCH /api/games/:gameId] Request body:", body);
 
-    const { status, scoreAgainst, notes, venue, oppositionName, location } =
-      body;
+    const {
+      status,
+      scoreAgainst,
+      notes,
+      venue,
+      oppositionName,
+      location,
+      matchDate,
+      gameTypeId,
+    } = body;
 
     // Check game exists
     const gameCheckResult = await db().execute(
-      "SELECT id, status FROM games WHERE id = ?",
+      "SELECT id, status, team_id FROM games WHERE id = ?",
       [gameId],
     );
 
@@ -157,6 +165,42 @@ export async function PATCH(
       );
     }
 
+    if (matchDate !== undefined) {
+      const parsedMatchDate =
+        typeof matchDate === "string"
+          ? new Date(`${matchDate}T00:00:00Z`)
+          : null;
+      if (
+        typeof matchDate !== "string" ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(matchDate) ||
+        parsedMatchDate === null ||
+        Number.isNaN(parsedMatchDate.getTime()) ||
+        parsedMatchDate.toISOString().slice(0, 10) !== matchDate
+      ) {
+        return NextResponse.json(
+          { success: false, error: "Match date must be a valid date" },
+          { status: 400 },
+        );
+      }
+      updates.push("match_date = ?");
+      values.push(matchDate);
+    }
+
+    if (gameTypeId !== undefined) {
+      const gameTypeResult = await db().execute(
+        "SELECT id FROM game_types WHERE id = ? AND team_id = ?",
+        [gameTypeId, gameCheckResult.rows[0].team_id],
+      );
+      if (gameTypeResult.rows.length === 0) {
+        return NextResponse.json(
+          { success: false, error: "Invalid game type" },
+          { status: 400 },
+        );
+      }
+      updates.push("game_type_id = ?");
+      values.push(gameTypeId);
+    }
+
     if (updates.length === 0) {
       console.warn(`[PATCH /api/games/:gameId] No fields to update`);
       return NextResponse.json(
@@ -165,11 +209,7 @@ export async function PATCH(
       );
     }
 
-    updates.push("id = ?");
-    values.push(gameId);
-
     const query = `UPDATE games SET ${updates.join(", ")} WHERE id = ?`;
-    // await db().execute(query, values);
     await db().execute({
       sql: query,
       args: [...values, gameId],

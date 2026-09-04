@@ -165,6 +165,7 @@ public/                   # Static assets
 - **Auto-Join Queries**: Games endpoint joins `game_types` for display
 - **Auto-Score Updates**: Goal POST auto-increments `games.score_for`
 - **Privacy by Default**: Anonymised IDs in all player data
+- **Client Mutations**: Prefer React Query for server state mutations, using optimistic updates with rollback on failure where appropriate
 
 ## Feature Index Tags
 
