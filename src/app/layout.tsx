@@ -33,7 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <QueryProvider>
 
           <Header />
-          <main className="flex-1 mt-[100px]">
+          <main className="flex-1 mt-[80px]">
             {children}
           </main>
         </QueryProvider>

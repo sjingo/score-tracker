@@ -48,6 +48,7 @@ export interface Player {
 
 export interface GameType {
   id: string;
+  type_name?: string;
   display_name: string;
   color?: string;
 }
