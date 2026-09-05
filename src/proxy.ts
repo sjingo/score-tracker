@@ -19,7 +19,7 @@ import { NextRequest, NextResponse } from "next/server";
  * Routes that require authentication
  * Unauthenticated users will be redirected to /login
  */
-const PROTECTED_ROUTES = ["/", "/debug", "/api/"];
+const PROTECTED_ROUTES = ["/", "/account", "/debug", "/api/"];
 
 /**
  * Public routes that don't need authentication

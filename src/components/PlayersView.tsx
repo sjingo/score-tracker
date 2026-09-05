@@ -82,12 +82,12 @@ export default function PlayersView() {
                     players.map((player) => (
                         <div
                             key={player.id}
-                            className="bg-white p-2 rounded-lg shadow-md border-l-4 border-green-500"
+                            className="min-w-0 bg-white p-2 rounded-lg shadow-md border-l-4 border-green-500"
                         >
-                            <div className="flex items-start justify-between">
-                                <div>
-                                    <div className="flex justify-between w-100">
-                                        <h3 className="font-semibold text-lg">
+                            <div className="flex min-w-0 items-start justify-between">
+                                <div className="min-w-0 w-full">
+                                    <div className="flex min-w-0 w-full justify-between">
+                                        <h3 className="break-words font-semibold text-lg">
                                             {player.name}
                                         </h3>
                                     </div>
@@ -98,7 +98,7 @@ export default function PlayersView() {
                                     )}
                                 </div>
                             </div>
-                            <span className="text-xs text-gray-500 mt-2">{player.anonymised_id}</span>
+                            <span className="mt-2 break-all text-xs text-gray-500">{player.anonymised_id}</span>
                         </div>
                     ))
                 )}

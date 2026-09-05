@@ -15,10 +15,10 @@ export default function Home() {
       {/* Navigation Tabs */}
       <div className="bg-white border-b">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="flex gap-4">
+          <div className="flex min-w-0 gap-4 overflow-x-auto">
             <button
               onClick={() => setActiveTab("games")}
-              className={`px-4 py-3 font-semibold border-b-2 transition ${activeTab === "games"
+              className={`shrink-0 px-4 py-3 font-semibold border-b-2 transition ${activeTab === "games"
                 ? "border-blue-500 text-blue-600"
                 : "border-transparent text-gray-600 hover:text-gray-900"
                 }`}
@@ -27,7 +27,7 @@ export default function Home() {
             </button>
             <button
               onClick={() => setActiveTab("players")}
-              className={`px-4 py-3 font-semibold border-b-2 transition ${activeTab === "players"
+              className={`shrink-0 px-4 py-3 font-semibold border-b-2 transition ${activeTab === "players"
                 ? "border-blue-500 text-blue-600"
                 : "border-transparent text-gray-600 hover:text-gray-900"
                 }`}
@@ -36,7 +36,7 @@ export default function Home() {
             </button>
             <button
               onClick={() => setActiveTab("matches")}
-              className={`px-4 py-3 font-semibold border-b-2 transition ${activeTab === "matches"
+              className={`shrink-0 px-4 py-3 font-semibold border-b-2 transition ${activeTab === "matches"
                 ? "border-blue-500 text-blue-600"
                 : "border-transparent text-gray-600 hover:text-gray-900"
                 }`}
@@ -45,7 +45,7 @@ export default function Home() {
             </button>
             <button
               onClick={() => setActiveTab("stats")}
-              className={`px-4 py-3 font-semibold border-b-2 transition ${activeTab === "stats"
+              className={`shrink-0 px-4 py-3 font-semibold border-b-2 transition ${activeTab === "stats"
                 ? "border-blue-500 text-blue-600"
                 : "border-transparent text-gray-600 hover:text-gray-900"
                 }`}
@@ -57,7 +57,7 @@ export default function Home() {
       </div>
 
       {/* Content */}
-      <div className="py-6">
+      <div className="py-6 ">
         {activeTab === "games" && <GamesView />}
         {activeTab === "players" && <PlayersView />}
         {activeTab === "matches" && <MatchesView />}

@@ -2,6 +2,8 @@
 
 import { useSession, signOut } from "@/lib/auth-client";
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { UserIcon } from "@/icons/user";
 
 export function AuthStatus() {
     const { data: session } = useSession();
@@ -14,9 +16,17 @@ export function AuthStatus() {
     }
 
     return (
-        <div className="flex items-center gap-4">
+        <div className="flex w-full justify-between  gap-4 px-2 pb-2">
+            <Link
+                href="/account"
+                aria-label="My account"
+                title="My account"
+                className="text-gray-600 transition-colors hover:text-blue-600"
+            >
+                <UserIcon />
+            </Link>
             <span className="text-sm text-gray-600">
-                Welcome, {session && session.user.email}
+                {session && session.user.email}
             </span>
             <button
                 onClick={async () => {
