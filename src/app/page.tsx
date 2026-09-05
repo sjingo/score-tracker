@@ -25,15 +25,7 @@ export default function Home() {
             >
               ⚽ Games
             </button>
-            <button
-              onClick={() => setActiveTab("players")}
-              className={`shrink-0 px-4 py-3 font-semibold border-b-2 transition ${activeTab === "players"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-600 hover:text-gray-900"
-                }`}
-            >
-              👥 Squad
-            </button>
+
             <button
               onClick={() => setActiveTab("matches")}
               className={`shrink-0 px-4 py-3 font-semibold border-b-2 transition ${activeTab === "matches"
@@ -52,6 +44,15 @@ export default function Home() {
             >
               📈 Stats
             </button>
+            <button
+              onClick={() => setActiveTab("players")}
+              className={`shrink-0 px-4 py-3 font-semibold border-b-2 transition ${activeTab === "players"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+            >
+              👥 Squad
+            </button>
           </div>
         </div>
       </div>
@@ -59,9 +60,9 @@ export default function Home() {
       {/* Content */}
       <div className="py-6 ">
         {activeTab === "games" && <GamesView />}
-        {activeTab === "players" && <PlayersView />}
         {activeTab === "matches" && <MatchesView />}
         {activeTab === "stats" && <StatsView />}
+        {activeTab === "players" && <PlayersView />}
       </div>
 
       {/* Footer Info */}
