@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useXgStatsQuery } from "@/app/api/stats/useXgStatsQuery";
 
 function formatDate(value: string) {
@@ -7,7 +8,11 @@ function formatDate(value: string) {
 }
 
 export default function StatsView() {
+    const [showOnlyGamesWithShots, setShowOnlyGamesWithShots] = useState(false);
     const { data: games = [], isLoading, isError } = useXgStatsQuery();
+    const visibleGames = showOnlyGamesWithShots
+        ? games.filter((game) => game.totalShots > 0)
+        : games;
 
     if (isLoading) {
         return <div className="max-w-6xl mx-auto px-4 py-8 text-gray-500">Loading stats...</div>;
@@ -24,11 +29,23 @@ export default function StatsView() {
                 <p className="mt-2 text-gray-600">Chance quality compared with actual goals scored.</p>
             </div>
 
-            {games.length === 0 ? (
-                <div className="rounded-lg bg-white p-6 text-center text-gray-500 shadow">No games found.</div>
+            <label className="mb-6 flex items-center gap-3 text-sm text-gray-700">
+                <input
+                    type="checkbox"
+                    checked={showOnlyGamesWithShots}
+                    onChange={(event) => setShowOnlyGamesWithShots(event.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                Only show games with recorded shots
+            </label>
+
+            {visibleGames.length === 0 ? (
+                <div className="rounded-lg bg-white p-6 text-center text-gray-500 shadow">
+                    {showOnlyGamesWithShots ? "No games with recorded shots found." : "No games found."}
+                </div>
             ) : (
                 <div className="space-y-6">
-                    {games.map((game) => (
+                    {visibleGames.map((game) => (
                         <section key={game.gameId} className="rounded-lg bg-white p-6 shadow">
                             <div className="flex flex-wrap items-start justify-between gap-4 border-b pb-4">
                                 <div>
