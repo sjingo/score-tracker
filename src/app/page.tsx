@@ -4,9 +4,10 @@ import { useState } from "react";
 import GamesView from "@/components/GamesView";
 import PlayersView from "@/components/PlayersView";
 import MatchesView from "@/components/MatchesView";
+import StatsView from "@/components/StatsView";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"games" | "players" | "matches">("games");
+  const [activeTab, setActiveTab] = useState<"games" | "players" | "matches" | "stats">("games");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -42,6 +43,15 @@ export default function Home() {
             >
               📊 Matches
             </button>
+            <button
+              onClick={() => setActiveTab("stats")}
+              className={`px-4 py-3 font-semibold border-b-2 transition ${activeTab === "stats"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-600 hover:text-gray-900"
+                }`}
+            >
+              📈 Stats
+            </button>
           </div>
         </div>
       </div>
@@ -51,6 +61,7 @@ export default function Home() {
         {activeTab === "games" && <GamesView />}
         {activeTab === "players" && <PlayersView />}
         {activeTab === "matches" && <MatchesView />}
+        {activeTab === "stats" && <StatsView />}
       </div>
 
       {/* Footer Info */}

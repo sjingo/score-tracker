@@ -8,12 +8,14 @@ import { useGameSaveMutation } from "@/app/api/games/hooks/useGameSaveMutation";
 import { useGameDateMutation } from "@/app/api/games/hooks/useGameDateMutation";
 import { useGameTypeMutation } from "@/app/api/games/hooks/useGameTypeMutation";
 import { useGameLocationMutation } from "@/app/api/games/hooks/useGameLocationMutation";
+import { ShotType, useGameShotMutation } from "@/app/api/games/hooks/useGameShotMutation";
 import ScorersPanel from "./ScorersPanel";
 import AssistsPanel from "./AssistsPanel";
 import SavesPanel from "./SavesPanel";
 import GameDatePicker from "./GameDatePicker";
 import GameTypeSelect from "./GameTypeSelect";
 import LocationSelect from "./LocationSelect";
+import ShotsPanel from "./ShotsPanel";
 
 
 
@@ -48,12 +50,14 @@ export default function GamesView() {
     const [selectedSaveGame, setSelectedSaveGame] = useState<string | null>(null);
     const [selectedSavePlayer, setSelectedSavePlayer] = useState<string | null>(null);
     const [saveError, setSaveError] = useState<string | null>(null);
+    const [shotError, setShotError] = useState<string | null>(null);
     const gameGoalMutation = useGameGoalMutation({ games, setGames });
     const gameAssistMutation = useGameAssistMutation({ games, setGames });
     const gameSaveMutation = useGameSaveMutation({ games, setGames });
     const gameDateMutation = useGameDateMutation({ games, setGames });
     const gameTypeMutation = useGameTypeMutation({ games, setGames });
     const gameLocationMutation = useGameLocationMutation({ games, setGames });
+    const gameShotMutation = useGameShotMutation();
 
     // Fetch initial data
     useEffect(() => {
@@ -352,6 +356,33 @@ export default function GamesView() {
         } catch (err) {
             console.error("[GamesView] Record save error:", err);
             setSaveError(String(err));
+        }
+    };
+
+    const handleRecordShot = async (gameId: string, shotType: ShotType) => {
+        try {
+            await gameShotMutation.mutateAsync({ gameId, shotType });
+            setShotError(null);
+        } catch (err) {
+            setShotError(String(err));
+        }
+    };
+
+    const handleEditShot = async (gameId: string, shotId: string, shotType: ShotType) => {
+        try {
+            await gameShotMutation.edit.mutateAsync({ gameId, shotId, shotType });
+            setShotError(null);
+        } catch (err) {
+            setShotError(String(err));
+        }
+    };
+
+    const handleDeleteShot = async (gameId: string, shotId: string) => {
+        try {
+            await gameShotMutation.remove.mutateAsync({ gameId, shotId });
+            setShotError(null);
+        } catch (err) {
+            setShotError(String(err));
         }
     };
 
@@ -738,6 +769,15 @@ export default function GamesView() {
                                     }}
                                     onRecordSave={handleRecordSave}
                                     onDeleteSave={handleDeleteSave}
+                                />
+
+                                <ShotsPanel
+                                    game={game}
+                                    shotError={shotError}
+                                    isPending={gameShotMutation.isPending}
+                                    onRecordShot={(shotType) => handleRecordShot(game.id, shotType)}
+                                    onEditShot={(shotId, shotType) => handleEditShot(game.id, shotId, shotType)}
+                                    onDeleteShot={(shotId) => handleDeleteShot(game.id, shotId)}
                                 />
 
                                 {/* Delete Game Button */}

@@ -165,8 +165,6 @@ CREATE TABLE season_stats (
   total_goals_against INTEGER DEFAULT 0,
   goal_difference INTEGER DEFAULT 0,
   top_scorer_id TEXT,
-  top_scorer_name TEXT,
-  top_scorer_goals INTEGER DEFAULT 0,
   FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
   FOREIGN KEY (top_scorer_id) REFERENCES players(id) ON DELETE SET NULL,
   UNIQUE(team_id, season)
@@ -186,8 +184,25 @@ CREATE INDEX idx_games_team_match_date ON games(team_id, match_date);
 CREATE INDEX idx_games_team_type_date ON games(team_id, game_type_id, match_date);
 CREATE INDEX idx_games_status ON games(status);
 CREATE INDEX idx_games_opposition ON games(opposition_name);
+-- ============================================================================
+-- 7. GAME_SHOTS TABLE
+-- ============================================================================
+
+CREATE TABLE `game_shots` (
+  `id` TEXT PRIMARY KEY,
+  `game_id` TEXT NOT NULL,
+  `shot_type` TEXT NOT NULL CHECK (`shot_type` IN ('big_chance', 'on_target', 'off_target', 'long_range')),
+  `xg_value` REAL NOT NULL CHECK (
+    (`shot_type` = 'big_chance' AND `xg_value` = 0.50) OR
+    (`shot_type` = 'on_target' AND `xg_value` = 0.30) OR
+    (`shot_type` = 'off_target' AND `xg_value` = 0.15) OR
+    (`shot_type` = 'long_range' AND `xg_value` = 0.05)
+  ),
+  CONSTRAINT `fk_game_shots_game_id_games_id_fk` FOREIGN KEY (`game_id`) REFERENCES `games` (`id`) ON DELETE CASCADE
+);
 CREATE INDEX idx_game_scorers_game_id ON game_scorers(game_id);
 CREATE INDEX idx_game_scorers_player_id ON game_scorers(player_id);
 CREATE INDEX idx_game_saves_game_id ON game_saves(game_id);
 CREATE INDEX idx_game_saves_player_id ON game_saves(player_id);
+CREATE INDEX idx_game_shots_game_id ON game_shots(game_id);
 CREATE INDEX idx_season_stats_team_id ON season_stats(team_id);
