@@ -66,10 +66,21 @@ export async function GET() {
           [game.id],
         );
 
+        const savesResult = await db().execute(
+          `SELECT gs.*, p.anonymised_id
+          FROM game_saves gs
+          LEFT JOIN players p ON gs.player_id = p.id
+          WHERE gs.game_id = ?
+          ORDER BY gs.save_count DESC`,
+          // @ts-expect-error TODO: type EnrichedGame
+          [game.id],
+        );
+
         return {
           ...game,
           scorers: scorersResult.rows || [],
           assists: assistsResult.rows || [],
+          saves: savesResult.rows || [],
         };
       }),
     );

@@ -135,7 +135,22 @@ CREATE TABLE game_scorers (
 );
 
 -- ============================================================================
--- 6. SEASON_STATS TABLE
+-- 6. GAME_SAVES TABLE
+-- ============================================================================
+
+CREATE TABLE game_saves (
+  id TEXT PRIMARY KEY,
+  game_id TEXT NOT NULL,
+  player_id TEXT NOT NULL,
+  player_name TEXT NOT NULL,
+  player_number INTEGER,
+  save_count INTEGER DEFAULT 1 NOT NULL CHECK (save_count >= 0),
+  FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
+  FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE RESTRICT
+);
+
+-- ============================================================================
+-- 7. SEASON_STATS TABLE
 -- ============================================================================
 
 CREATE TABLE season_stats (
@@ -173,4 +188,6 @@ CREATE INDEX idx_games_status ON games(status);
 CREATE INDEX idx_games_opposition ON games(opposition_name);
 CREATE INDEX idx_game_scorers_game_id ON game_scorers(game_id);
 CREATE INDEX idx_game_scorers_player_id ON game_scorers(player_id);
+CREATE INDEX idx_game_saves_game_id ON game_saves(game_id);
+CREATE INDEX idx_game_saves_player_id ON game_saves(player_id);
 CREATE INDEX idx_season_stats_team_id ON season_stats(team_id);

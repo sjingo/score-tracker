@@ -15,6 +15,7 @@ export interface Game {
   location?: string;
   scorers?: Scorer[];
   assists?: Assist[];
+  saves?: Save[];
 }
 
 export interface Team {
@@ -35,6 +36,14 @@ export interface Assist {
   player_id: string;
   player_name: string;
   assist_count: number;
+  anonymised_id?: string;
+}
+
+export interface Save {
+  id: string;
+  player_id: string;
+  player_name: string;
+  save_count: number;
   anonymised_id?: string;
 }
 
