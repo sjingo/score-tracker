@@ -4,11 +4,13 @@ import { useEffect, useState, useMemo } from "react";
 import { Game, Player, GameType, Team, OPPOSITION_GOAL } from '../types'
 import { useGameGoalMutation } from "@/app/api/games/hooks/useGameGoalMutation";
 import { useGameAssistMutation } from "@/app/api/games/hooks/useGameAssistMutation";
+import { useGameSaveMutation } from "@/app/api/games/hooks/useGameSaveMutation";
 import { useGameDateMutation } from "@/app/api/games/hooks/useGameDateMutation";
 import { useGameTypeMutation } from "@/app/api/games/hooks/useGameTypeMutation";
 import { useGameLocationMutation } from "@/app/api/games/hooks/useGameLocationMutation";
 import ScorersPanel from "./ScorersPanel";
 import AssistsPanel from "./AssistsPanel";
+import SavesPanel from "./SavesPanel";
 import GameDatePicker from "./GameDatePicker";
 import GameTypeSelect from "./GameTypeSelect";
 import LocationSelect from "./LocationSelect";
@@ -43,8 +45,12 @@ export default function GamesView() {
     const [selectedAssistGame, setSelectedAssistGame] = useState<string | null>(null);
     const [selectedAssistPlayer, setSelectedAssistPlayer] = useState<string | null>(null);
     const [assistError, setAssistError] = useState<string | null>(null);
+    const [selectedSaveGame, setSelectedSaveGame] = useState<string | null>(null);
+    const [selectedSavePlayer, setSelectedSavePlayer] = useState<string | null>(null);
+    const [saveError, setSaveError] = useState<string | null>(null);
     const gameGoalMutation = useGameGoalMutation({ games, setGames });
     const gameAssistMutation = useGameAssistMutation({ games, setGames });
+    const gameSaveMutation = useGameSaveMutation({ games, setGames });
     const gameDateMutation = useGameDateMutation({ games, setGames });
     const gameTypeMutation = useGameTypeMutation({ games, setGames });
     const gameLocationMutation = useGameLocationMutation({ games, setGames });
@@ -290,11 +296,95 @@ export default function GamesView() {
             setAssistError(String(err));
         }
     };
+    const handleRecordSave = async (
+        gameId: string,
+        saveCount: number,
+        playerId?: string,
+    ) => {
+        const savePlayerId = playerId || selectedSavePlayer;
+        if (!savePlayerId) {
+            setSaveError("Please select a player");
+            return;
+        }
+
+        try {
+            const player = players.find((item) => item.id === savePlayerId);
+            if (!player) {
+                setSaveError("Player not found");
+                return;
+            }
+
+            const save = await gameSaveMutation.mutateAsync({
+                gameId,
+                saveCount,
+                player,
+            });
+
+            setGames((currentGames) =>
+                currentGames.map((game) => {
+                    if (game.id !== gameId) return game;
+
+                    const saves = game.saves || [];
+                    const updatedSaves = save.save_count === 0
+                        ? saves.filter((item) => item.player_id !== save.player_id)
+                        : saves.some((item) => item.player_id === save.player_id)
+                            ? saves.map((item) =>
+                                item.player_id === save.player_id
+                                    ? { ...item, id: save.id, save_count: save.save_count }
+                                    : item,
+                            )
+                            : [
+                                ...saves,
+                                {
+                                    id: save.id,
+                                    player_id: save.player_id,
+                                    player_name: save.player_name,
+                                    save_count: save.save_count,
+                                    anonymised_id: player.anonymised_id,
+                                },
+                            ];
+
+                    return { ...game, saves: updatedSaves };
+                }),
+            );
+            setSelectedSavePlayer(null);
+            setSaveError(null);
+        } catch (err) {
+            console.error("[GamesView] Record save error:", err);
+            setSaveError(String(err));
+        }
+    };
+
+    const handleDeleteSave = async (gameId: string, saveId: string) => {
+        if (!window.confirm("Are you sure you want to remove this save?")) return;
+
+        try {
+            const response = await fetch(`/api/games/${gameId}/saves`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ saveId }),
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                const gamesResponse = await fetch("/api/games");
+                const gamesData = await gamesResponse.json();
+                setGames(gamesData.data || []);
+            } else {
+                setSaveError(result.error);
+            }
+        } catch (err) {
+            console.error("[GamesView] Delete save error:", err);
+            setSaveError(String(err));
+        }
+    };
 
     const handleDeleteAssist = async (gameId: string, assistId: string) => {
         if (!window.confirm("Are you sure you want to remove this assist?")) {
             return;
         }
+
+
 
         try {
             const res = await fetch(`/api/games/${gameId}/assists`, {
@@ -405,7 +495,6 @@ export default function GamesView() {
         }
     };
 
-    console.log('selectedGame', selectedGame)
     const activeGames = games.filter((g) => g.status === "in-progress");
     const completedGames = games.filter((g) => g.status === "completed");
     const activePlayers = useMemo(() => [{ id: OPPOSITION_GOAL, jersey_number: '0', name: 'Opposition Goal', is_active: true }, ...players.filter((p) => p.is_active)], [players]);
@@ -511,8 +600,8 @@ export default function GamesView() {
                             className="border p-3 rounded bg-gray-50"
                         >
                             <option value="">Select Location (optional)</option>
-                            <option value="home">🏠 Home</option>
-                            <option value="away">🚗 Away</option>
+                            <option value="home">Home</option>
+                            <option value="away">Away</option>
                         </select>
                     </div>
                     <textarea
@@ -635,6 +724,20 @@ export default function GamesView() {
                                     }}
                                     onRecordAssist={handleRecordAssist}
                                     onDeleteAssist={handleDeleteAssist}
+                                />
+
+                                <SavesPanel
+                                    game={game}
+                                    activePlayers={activePlayers.filter((player) => player.id !== OPPOSITION_GOAL)}
+                                    selectedGame={selectedSaveGame}
+                                    selectedPlayer={selectedSavePlayer}
+                                    saveError={saveError}
+                                    onSelectPlayer={(gameId, playerId) => {
+                                        setSelectedSaveGame(gameId);
+                                        setSelectedSavePlayer(playerId);
+                                    }}
+                                    onRecordSave={handleRecordSave}
+                                    onDeleteSave={handleDeleteSave}
                                 />
 
                                 {/* Delete Game Button */}

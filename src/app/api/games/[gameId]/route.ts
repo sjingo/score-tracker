@@ -210,6 +210,7 @@ export async function PATCH(
     }
 
     const query = `UPDATE games SET ${updates.join(", ")} WHERE id = ?`;
+    // await db().execute(query, values);
     await db().execute({
       sql: query,
       args: [...values, gameId],

@@ -24,7 +24,7 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
         }
     };
 
-    const truncateScorers = (scorers: Array<{ player_name?: string; anonymised_id?: string; goal_count?: number; assist_count?: number }>, maxLines: number = 2) => {
+    const truncateScorers = (scorers: Array<{ player_name?: string; anonymised_id?: string; goal_count?: number; assist_count?: number; save_count?: number }>, maxLines: number = 2) => {
         if (!scorers || scorers.length === 0) return [];
         // Simple truncation: assume ~2 scorers per line at small font
         const maxItems = maxLines * 2;
@@ -53,6 +53,7 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Result</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Scorers</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Assists</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Saves</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -60,8 +61,10 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                             const result = getResultBadge(match.score_for, match.score_against);
                             const scorers = truncateScorers(match.scorers || []);
                             const assists = truncateScorers(match.assists || []);
+                            const saves = truncateScorers(match.saves || []);
                             const hasMoreScorers = (match.scorers?.length || 0) > 4;
                             const hasMoreAssists = (match.assists?.length || 0) > 4;
+                            const hasMoreSaves = (match.saves?.length || 0) > 4;
 
                             return (
                                 <tr key={match.id} className="hover:bg-gray-50">
@@ -119,6 +122,25 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                                                     ))}
                                                     {hasMoreAssists && (
                                                         <div className="text-gray-500 italic">+{(match.assists?.length || 0) - 4} more</div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <span className="text-gray-400">-</span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="text-xs text-gray-700 leading-relaxed max-h-12 overflow-hidden">
+                                            {saves.length > 0 ? (
+                                                <div>
+                                                    {saves.map((save, idx) => (
+                                                        <div key={idx}>
+                                                            {save.player_name || save.anonymised_id}
+                                                            {save.save_count !== undefined && save.save_count > 1 && ` (${save.save_count})`}
+                                                        </div>
+                                                    ))}
+                                                    {hasMoreSaves && (
+                                                        <div className="text-gray-500 italic">+{(match.saves?.length || 0) - 4} more</div>
                                                     )}
                                                 </div>
                                             ) : (
