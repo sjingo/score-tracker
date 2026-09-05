@@ -210,6 +210,10 @@ export async function PATCH(
     }
 
     const query = `UPDATE games SET ${updates.join(", ")} WHERE id = ?`;
+<<<<<<< Updated upstream
+=======
+    // await db().execute(query, values);
+>>>>>>> Stashed changes
     await db().execute({
       sql: query,
       args: [...values, gameId],
