@@ -59,7 +59,7 @@ export default function AccountPage() {
                     Signed in as {session?.user.email}
                 </p>
 
-                <section className="mt-8 border-t border-gray-200 pt-6">
+                <section className="mt-8 border-t border-salts-blue pt-6">
                     <h2 className="text-lg font-semibold text-gray-900">Change password</h2>
                     <p className="mt-1 text-sm text-gray-600">
                         Use your current password to set a new one.
@@ -86,7 +86,7 @@ export default function AccountPage() {
                                 type="password"
                                 value={currentPassword}
                                 onChange={(event) => setCurrentPassword(event.target.value)}
-                                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-salts-blue"
                                 autoComplete="current-password"
                                 required
                             />
@@ -101,7 +101,7 @@ export default function AccountPage() {
                                 type="password"
                                 value={newPassword}
                                 onChange={(event) => setNewPassword(event.target.value)}
-                                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-salts-blue"
                                 autoComplete="new-password"
                                 minLength={8}
                                 required
@@ -117,7 +117,7 @@ export default function AccountPage() {
                                 type="password"
                                 value={confirmation}
                                 onChange={(event) => setConfirmation(event.target.value)}
-                                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-salts-blue"
                                 autoComplete="new-password"
                                 minLength={8}
                                 required

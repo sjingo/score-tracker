@@ -66,7 +66,7 @@ export default function PlayersView() {
                     <button
                         type="submit"
                         disabled={addPlayerMutation.isPending}
-                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-60"
+                        className="bg-salts-blue text-white px-4 py-2 rounded hover:bg-salts-blue disabled:opacity-60"
                     >
                         {addPlayerMutation.isPending ? "Adding..." : "Add Player"}
                     </button>
@@ -82,7 +82,7 @@ export default function PlayersView() {
                     players.map((player) => (
                         <div
                             key={player.id}
-                            className="min-w-0 bg-white p-2 rounded-lg shadow-md border-l-4 border-green-500"
+                            className="min-w-0 bg-white p-2 rounded-lg shadow-md border-l-4 border-salts-blue"
                         >
                             <div className="flex min-w-0 items-start justify-between">
                                 <div className="min-w-0 w-full">

@@ -34,7 +34,7 @@ export default function StatsView() {
                     type="checkbox"
                     checked={showOnlyGamesWithShots}
                     onChange={(event) => setShowOnlyGamesWithShots(event.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-salts-blue"
                 />
                 Only show games with recorded shots
             </label>
@@ -66,7 +66,7 @@ export default function StatsView() {
 
                             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                                 {game.breakdown.map((item) => (
-                                    <div key={item.type} className="rounded border border-gray-200 p-4">
+                                    <div key={item.type} className="rounded border border-salts-blue p-4">
                                         <div className="font-semibold text-gray-900">{item.label}</div>
                                         <div className="mt-2 text-sm text-gray-600">
                                             {item.count} shots × {item.value.toFixed(2)}

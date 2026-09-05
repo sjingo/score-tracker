@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { randomUUID } from "crypto";
 import { Row } from "@libsql/client";
+import { requireRole } from "@/lib/authorization";
 
 // ============================================================================
 // GET all games for Lions team (with game_types and scorers)
@@ -10,10 +11,13 @@ interface EnrichedGame {
   scorers: Row[];
   length: number;
 }
-export async function GET() {
+export async function GET(request: NextRequest) {
   console.log("[GET /api/games] Fetching all games for Lions team");
 
   try {
+    const authorization = await requireRole(request, "admin");
+    if (authorization instanceof Response) return authorization;
+
     // Get Lions team ID
     const teamsResult = await db().execute(
       "SELECT id FROM teams WHERE team_name = 'Lions'",
@@ -109,6 +113,9 @@ export async function POST(request: NextRequest) {
   console.log("[POST /api/games] Creating new game");
 
   try {
+    const authorization = await requireRole(request, "admin");
+    if (authorization instanceof Response) return authorization;
+
     const body = await request.json();
     console.log("[POST /api/games] Request body:", body);
 

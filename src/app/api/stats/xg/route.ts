@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { requireRole } from "@/lib/authorization";
 
 const SHOT_TYPES = [
   { type: "big_chance", label: "Big chance", value: 0.5 },
@@ -8,8 +9,11 @@ const SHOT_TYPES = [
   { type: "long_range", label: "Long range", value: 0.05 },
 ] as const;
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const authorization = await requireRole(request, "admin");
+    if (authorization instanceof Response) return authorization;
+
     const result = await db().execute(`
       SELECT
         g.id AS game_id,
