@@ -34,7 +34,7 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
     return (
         <div className="bg-white rounded-lg shadow overflow-hidden">
             {gameType && (
-                <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
+                <div className="px-6 py-3 bg-gray-50 border-b border-salts-blue">
                     <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                         <span
                             className="w-3 h-3 rounded-full"
@@ -46,7 +46,7 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
             )}
             <div className="overflow-x-auto">
                 <table className="w-full">
-                    <thead className="bg-gray-100 border-b border-gray-200">
+                    <thead className="bg-gray-100 border-b border-salts-blue">
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Match</th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Score</th>

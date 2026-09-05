@@ -550,7 +550,7 @@ export default function GamesView() {
             )}
 
             {/* New Game Form */}
-            <div className="bg-white p-4 rounded-lg shadow-md mb-6 border-l-4 border-green-500">
+            <div className="bg-white p-4 rounded-lg shadow-md mb-6 border-l-4 border-salts-blue">
                 <h2 className="text-2xl font-bold mb-4">➕ Create New Game</h2>
                 <form onSubmit={handleCreateGame} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -644,7 +644,7 @@ export default function GamesView() {
                     />
                     <button
                         type="submit"
-                        className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 font-semibold"
+                        className="bg-salts-blue text-white px-6 py-2 rounded hover:bg-green-700 font-semibold"
                     >
                         Create Game
                     </button>
@@ -670,7 +670,7 @@ export default function GamesView() {
                                     </div>
                                     <button
                                         onClick={() => handleUpdateGameStatus(game.id, "completed")}
-                                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-xs font-semibold"
+                                        className="bg-salts-blue text-white px-3 py-1 rounded hover:bg-blue-600 text-xs font-semibold"
                                     >
                                         Complete
                                     </button>

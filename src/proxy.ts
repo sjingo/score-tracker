@@ -13,6 +13,7 @@
  */
 
 import { auth } from "@/lib/auth";
+import { getSessionRole } from "@/lib/authorization";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
@@ -69,6 +70,19 @@ export async function proxy(request: NextRequest) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("from", pathname); // Optional: where to redirect after login
       return NextResponse.redirect(loginUrl);
+    }
+
+    if (
+      getSessionRole(session) !== "admin" &&
+      (pathname.startsWith("/api/games") ||
+        pathname.startsWith("/api/players") ||
+        pathname.startsWith("/api/game-types") ||
+        pathname.startsWith("/api/stats"))
+    ) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden" },
+        { status: 403 },
+      );
     }
 
     // Session is valid: allow request to proceed

@@ -78,7 +78,7 @@ export default function ScorersPanel({
                                                 {scorer.goal_count}
                                             </span>
                                         </span>
-                                        {/* <span className="font-bold bg-blue-500 text-white px-3 py-1 rounded">
+                                        {/* <span className="font-bold bg-salts-blue text-white px-3 py-1 rounded">
                                 </span> */}
                                         <div className="flex items-center gap-2">
                                             <button

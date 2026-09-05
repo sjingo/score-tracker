@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { randomUUID } from "crypto";
+import { requireRole } from "@/lib/authorization";
 
 // GET all players
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const authorization = await requireRole(request, "admin");
+    if (authorization instanceof Response) return authorization;
+
     const result = await db().execute(
       "SELECT * FROM players WHERE is_active = 1 ORDER BY jersey_number ASC",
     );
@@ -25,6 +29,9 @@ export async function GET() {
 // POST new player
 export async function POST(request: NextRequest) {
   try {
+    const authorization = await requireRole(request, "admin");
+    if (authorization instanceof Response) return authorization;
+
     const body = await request.json();
     const { name, jerseyNumber } = body;
 

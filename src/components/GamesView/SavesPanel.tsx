@@ -56,7 +56,7 @@ export default function SavesPanel({
                                         <span>
                                             {save.player_name}{" "}
                                             {save.anonymised_id && <span className="text-gray-500 text-sm">({save.anonymised_id})</span>}
-                                            <span className="ml-2 font-bold bg-blue-500 text-white px-3 py-1 rounded">{save.save_count}</span>
+                                            <span className="ml-2 font-bold bg-salts-blue text-white px-3 py-1 rounded">{save.save_count}</span>
                                         </span>
                                         <div className="flex items-center gap-2">
                                             <button type="button" aria-label={`Add save for ${save.player_name}`} onClick={() => onRecordSave(game.id, 1, save.player_id)} className="text-blue-600 hover:text-blue-800">
