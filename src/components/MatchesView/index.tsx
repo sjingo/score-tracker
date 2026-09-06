@@ -1,46 +1,24 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Game, GameType } from '../types';
+import { useGamesQuery } from "@/app/api/games/hooks/useGamesQuery";
+import { useGameTypesQuery } from "@/app/api/game-types/hooks/useGameTypesQuery";
 import LeagueTable from './LeagueTable';
 import MatchResults from './MatchResults';
 
 export default function MatchesView() {
-    const [games, setGames] = useState<Game[]>([]);
-    const [gameTypes, setGameTypes] = useState<GameType[]>([]);
+    // React Query hooks - data fetched with 10 minute stale time
+    const { data: gamesData = [], isLoading: gamesLoading } = useGamesQuery();
+    const { data: gameTypesData = [], isLoading: typesLoading } = useGameTypesQuery();
+
+    // Local state for UI interactions
+    const [games, setGames] = useState<Game[]>(gamesData);
+    const [gameTypes, setGameTypes] = useState<GameType[]>(gameTypesData);
     const [selectedGameTypeId, setSelectedGameTypeId] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Fetch data
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [gamesRes, typesRes] = await Promise.all([
-                    fetch("/api/games"),
-                    fetch("/api/game-types"),
-                ]);
-
-                const gamesData = await gamesRes.json();
-                const typesData = await typesRes.json();
-
-                // Handle both response structures
-                const games = gamesData.data || gamesData;
-                const types = typesData.data || typesData;
-
-                setGames(games);
-                setGameTypes(types);
-                setError(null);
-            } catch (err) {
-                setError("Failed to load matches");
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, []);
+    const loading = gamesLoading || typesLoading;
 
     // Group games by game type if a filter is selected
     const displayData = useMemo(() => {

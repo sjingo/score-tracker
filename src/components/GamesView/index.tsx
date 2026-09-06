@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Game, Player, GameType, Team, OPPOSITION_GOAL } from '../types'
 import { useGameGoalMutation } from "@/app/api/games/hooks/useGameGoalMutation";
 import { useGameAssistMutation } from "@/app/api/games/hooks/useGameAssistMutation";
@@ -9,6 +9,10 @@ import { useGameDateMutation } from "@/app/api/games/hooks/useGameDateMutation";
 import { useGameTypeMutation } from "@/app/api/games/hooks/useGameTypeMutation";
 import { useGameLocationMutation } from "@/app/api/games/hooks/useGameLocationMutation";
 import { ShotType, useGameShotMutation } from "@/app/api/games/hooks/useGameShotMutation";
+import { useGamesQuery } from "@/app/api/games/hooks/useGamesQuery";
+import { usePlayersQuery } from "@/app/api/players/hooks/usePlayersQuery";
+import { useGameTypesQuery } from "@/app/api/game-types/hooks/useGameTypesQuery";
+import { useTeamsQuery } from "@/app/api/teams/hooks/useTeamsQuery";
 import ScorersPanel from "./ScorersPanel";
 import AssistsPanel from "./AssistsPanel";
 import SavesPanel from "./SavesPanel";
@@ -20,11 +24,17 @@ import ShotsPanel from "./ShotsPanel";
 
 
 export default function GamesView() {
-    const [games, setGames] = useState<Game[]>([]);
-    const [players, setPlayers] = useState<Player[]>([]);
-    const [gameTypes, setGameTypes] = useState<GameType[]>([]);
-    const [oppositionTeams, setOppositionTeams] = useState<Team[]>([]);
-    const [loading, setLoading] = useState(true);
+    // React Query hooks - data fetched with 10 minute stale time
+    const { data: gamesData = [], isLoading: gamesLoading } = useGamesQuery();
+    const { data: playersData = [], isLoading: playersLoading } = usePlayersQuery();
+    const { data: gameTypesData = [], isLoading: typesLoading } = useGameTypesQuery();
+    const { data: teamsData = [], isLoading: teamsLoading } = useTeamsQuery();
+
+    // Local state for UI interactions and optimistic updates
+    const [games, setGames] = useState<Game[]>(gamesData);
+    const [players] = useState<Player[]>(playersData);
+    const [gameTypes] = useState<GameType[]>(gameTypesData);
+    const [oppositionTeams, setOppositionTeams] = useState<Team[]>(teamsData);
     const [error, setError] = useState<string | null>(null);
     const [addingTeam, setAddingTeam] = useState(false);
     const [newTeamName, setNewTeamName] = useState("");
@@ -51,6 +61,7 @@ export default function GamesView() {
     const [selectedSavePlayer, setSelectedSavePlayer] = useState<string | null>(null);
     const [saveError, setSaveError] = useState<string | null>(null);
     const [shotError, setShotError] = useState<string | null>(null);
+
     const gameGoalMutation = useGameGoalMutation({ games, setGames });
     const gameAssistMutation = useGameAssistMutation({ games, setGames });
     const gameSaveMutation = useGameSaveMutation({ games, setGames });
@@ -59,38 +70,7 @@ export default function GamesView() {
     const gameLocationMutation = useGameLocationMutation({ games, setGames });
     const gameShotMutation = useGameShotMutation();
 
-    // Fetch initial data
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [gamesRes, playersRes, typesRes, teamsRes] = await Promise.all([
-                    fetch("/api/games"),
-                    fetch("/api/players"),
-                    fetch("/api/game-types"),
-                    fetch("/api/teams"),
-                ]);
-
-                const gamesData = await gamesRes.json();
-                const playersData = await playersRes.json();
-                const typesData = await typesRes.json();
-                const teamsData = await teamsRes.json();
-
-
-
-                setGames(gamesData.data || []);
-                setPlayers(playersData.data || []);
-                setGameTypes(typesData.data || []);
-                setOppositionTeams(teamsData.data || []);
-            } catch (err) {
-                console.error("[GamesView] Fetch error:", err);
-                setError(String(err));
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, []);
+    const loading = gamesLoading || playersLoading || typesLoading || teamsLoading;
 
     const handleCreateGame = async (e: React.FormEvent) => {
         e.preventDefault();

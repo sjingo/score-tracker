@@ -15,8 +15,8 @@ export const Header = () => {
 
 
     return (
-        <header className="bg-salts-blue fixed inset-x-0 top-0 z-10 border-b border-gray-950/5 dark:border-white/10">
-            <div className="flex items-center justify-between flex-wrap pt-2" >
+        <header className="bg-salts-blue  fixed inset-x-0 top-0 z-10 border-b border-gray-950/5 dark:border-white/10">
+            <div className="flex items-center justify-between flex-wrap pt-2 max-w-[1200px] m-auto relative">
                 {/* Logo and Navigation */}
                 <div className="flex w-full px-2 gap-4">
                     <Link
@@ -56,12 +56,11 @@ export const Header = () => {
                         // window.location.href = "/";
                         redirect("/login");
                     }}
-                    className="absolute right-0 text-md bg-amber-400 text-sky-600 text-bold hover:bg-amber-400 transition-colors p-2 h-full top-0"
+                    className="cursor-pointer absolute right-0 text-md bg-amber-400 text-sky-600 text-bold hover:bg-amber-400 transition-colors p-2 h-full top-0"
                 >
-                    <LogoutIcon className="size-6 stroke-sky-600 dark:stroke-white-500" />
+                    <LogoutIcon className="size-6 stroke-sky-600 dark:stroke-white-500 " />
                 </button>
             </div>
-
-        </header>
+        </header >
     );
 }
