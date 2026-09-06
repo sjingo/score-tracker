@@ -1,7 +1,8 @@
 "use client";
+import { CloseIcon } from "@/icons/close";
 
-import { useEffect, useState, useMemo } from "react";
-import { Game, Player, GameType, Team, OPPOSITION_GOAL } from '../types'
+import { useState, useMemo, useEffect } from "react";
+import { Game, GameType, Team, OPPOSITION_GOAL } from '../types'
 import { useGameGoalMutation } from "@/app/api/games/hooks/useGameGoalMutation";
 import { useGameAssistMutation } from "@/app/api/games/hooks/useGameAssistMutation";
 import { useGameSaveMutation } from "@/app/api/games/hooks/useGameSaveMutation";
@@ -9,6 +10,10 @@ import { useGameDateMutation } from "@/app/api/games/hooks/useGameDateMutation";
 import { useGameTypeMutation } from "@/app/api/games/hooks/useGameTypeMutation";
 import { useGameLocationMutation } from "@/app/api/games/hooks/useGameLocationMutation";
 import { ShotType, useGameShotMutation } from "@/app/api/games/hooks/useGameShotMutation";
+import { useGamesQuery } from "@/app/api/games/hooks/useGamesQuery";
+import { usePlayersQuery } from "@/app/api/players/hooks/usePlayersQuery";
+import { useGameTypesQuery } from "@/app/api/game-types/hooks/useGameTypesQuery";
+import { useTeamsQuery } from "@/app/api/teams/hooks/useTeamsQuery";
 import ScorersPanel from "./ScorersPanel";
 import AssistsPanel from "./AssistsPanel";
 import SavesPanel from "./SavesPanel";
@@ -18,16 +23,37 @@ import LocationSelect from "./LocationSelect";
 import ShotsPanel from "./ShotsPanel";
 
 
+interface GamesViewProps {
+    initialGames: Game[];
+    onInProgressGameChange?: (hasInProgressGame: boolean) => void;
+}
 
-export default function GamesView() {
-    const [games, setGames] = useState<Game[]>([]);
-    const [players, setPlayers] = useState<Player[]>([]);
-    const [gameTypes, setGameTypes] = useState<GameType[]>([]);
-    const [oppositionTeams, setOppositionTeams] = useState<Team[]>([]);
-    const [loading, setLoading] = useState(true);
+export default function GamesView({ initialGames, onInProgressGameChange }: GamesViewProps) {
+    // Local state for UI interactions and optimistic updates
+    const [games, setGames] = useState<Game[]>(initialGames);
+    const [showCreatePanel, setShowCreatePanel] = useState(false);
+
+    // Detect in-progress games early so we can use it for lazy-loading triggers
+    const hasInProgressGame = useMemo(
+        () => games.some((game) => game.status === "in-progress"),
+        [games]
+    );
+
+    // React Query hooks - game types and teams fetch when create panel opens OR game is in progress
+    const { isLoading: gamesLoading } = useGamesQuery(initialGames);
+    const { data: playersData = [], isLoading: playersLoading } = usePlayersQuery();
+    const { data: gameTypesData = [], isLoading: typesLoading } = useGameTypesQuery(showCreatePanel || hasInProgressGame);
+    const { data: teamsData = [], isLoading: teamsLoading } = useTeamsQuery(showCreatePanel || hasInProgressGame);
+
+    // More state variables
+    const [locallyAddedTeams, setLocallyAddedTeams] = useState<Team[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [addingTeam, setAddingTeam] = useState(false);
     const [newTeamName, setNewTeamName] = useState("");
+
+    // Combine query data with locally added teams
+    const oppositionTeams: Team[] = [...teamsData, ...locallyAddedTeams];
+    const gameTypes: GameType[] = gameTypesData;
 
     // Form states
     const [newGame, setNewGame] = useState({
@@ -51,6 +77,7 @@ export default function GamesView() {
     const [selectedSavePlayer, setSelectedSavePlayer] = useState<string | null>(null);
     const [saveError, setSaveError] = useState<string | null>(null);
     const [shotError, setShotError] = useState<string | null>(null);
+
     const gameGoalMutation = useGameGoalMutation({ games, setGames });
     const gameAssistMutation = useGameAssistMutation({ games, setGames });
     const gameSaveMutation = useGameSaveMutation({ games, setGames });
@@ -59,38 +86,12 @@ export default function GamesView() {
     const gameLocationMutation = useGameLocationMutation({ games, setGames });
     const gameShotMutation = useGameShotMutation();
 
-    // Fetch initial data
+    // Only wait for initial game data; types and teams are lazy-loaded when create panel opens or game is in progress
+    const loading = gamesLoading || playersLoading;
+
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [gamesRes, playersRes, typesRes, teamsRes] = await Promise.all([
-                    fetch("/api/games"),
-                    fetch("/api/players"),
-                    fetch("/api/game-types"),
-                    fetch("/api/teams"),
-                ]);
-
-                const gamesData = await gamesRes.json();
-                const playersData = await playersRes.json();
-                const typesData = await typesRes.json();
-                const teamsData = await teamsRes.json();
-
-
-
-                setGames(gamesData.data || []);
-                setPlayers(playersData.data || []);
-                setGameTypes(typesData.data || []);
-                setOppositionTeams(teamsData.data || []);
-            } catch (err) {
-                console.error("[GamesView] Fetch error:", err);
-                setError(String(err));
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, []);
+        onInProgressGameChange?.(hasInProgressGame);
+    }, [hasInProgressGame, onInProgressGameChange]);
 
     const handleCreateGame = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -142,7 +143,7 @@ export default function GamesView() {
                 return;
             }
 
-            setOppositionTeams((teams) =>
+            setLocallyAddedTeams((teams) =>
                 teams.some((team) => team.id === result.data.id)
                     ? teams
                     : [...teams, result.data].sort((a, b) =>
@@ -178,7 +179,7 @@ export default function GamesView() {
             const isOppositionGoal = scorerId === OPPOSITION_GOAL;
             const player = isOppositionGoal
                 ? undefined
-                : players.find((p) => p.id === scorerId);
+                : playersData.find((p) => p.id === scorerId);
 
             if (!isOppositionGoal && !player) {
                 console.warn("[GamesView] Player not found");
@@ -249,7 +250,7 @@ export default function GamesView() {
         }
 
         try {
-            const player = players.find((p) => p.id === assistPlayerId);
+            const player = playersData.find((p) => p.id === assistPlayerId);
             if (!player) {
                 console.warn("[GamesView] Assist player not found");
                 setAssistError("Player not found");
@@ -312,7 +313,7 @@ export default function GamesView() {
         }
 
         try {
-            const player = players.find((item) => item.id === savePlayerId);
+            const player = playersData.find((item) => item.id === savePlayerId);
             if (!player) {
                 setSaveError("Player not found");
                 return;
@@ -528,7 +529,7 @@ export default function GamesView() {
 
     const activeGames = games.filter((g) => g.status === "in-progress");
     const completedGames = games.filter((g) => g.status === "completed");
-    const activePlayers = useMemo(() => [{ id: OPPOSITION_GOAL, jersey_number: '0', name: 'Opposition Goal', is_active: true }, ...players.filter((p) => p.is_active)], [players]);
+    const activePlayers = useMemo(() => [{ id: OPPOSITION_GOAL, jersey_number: '0', name: 'Opposition Goal', is_active: true }, ...playersData.filter((p) => p.is_active)], [playersData]);
 
     if (loading)
         return (
@@ -549,107 +550,121 @@ export default function GamesView() {
                 </div>
             )}
 
-            {/* New Game Form */}
-            <div className="bg-white p-4 rounded-lg shadow-md mb-6 border-l-4 border-salts-blue">
-                <h2 className="text-2xl font-bold mb-4">➕ Create New Game</h2>
-                <form onSubmit={handleCreateGame} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
+            {/* Create New Game Toggle Button */}
+            <button
+                onClick={() => setShowCreatePanel(!showCreatePanel)}
+                className="mb-6 bg-salts-blue text-amber-200 px-6 py-2 rounded hover:bg-blue-700 font-semibold"
+            >
+                {showCreatePanel ? (<><CloseIcon className="size-6 stroke-3" /> </>) : "New Game"}
+            </button>
+
+            {/* New Game Form Panel */}
+            {showCreatePanel && (
+                <div className="bg-white p-4 rounded-lg shadow-md mb-6 border-l-4 border-salts-blue">
+                    <h2 className="text-2xl font-bold mb-4">New Game</h2>
+                    <form onSubmit={handleCreateGame} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <select
+                                    value={addingTeam ? "__add_new__" : newGame.oppositionTeamId}
+                                    onChange={(e) => {
+                                        if (e.target.value === "__add_new__") {
+                                            setAddingTeam(true);
+                                            setNewGame({ ...newGame, oppositionTeamId: "", oppositionName: "" });
+                                            return;
+                                        }
+                                        const team = oppositionTeams.find((item) => item.id === e.target.value);
+                                        setNewGame({
+                                            ...newGame,
+                                            oppositionTeamId: e.target.value,
+                                            oppositionName: team?.team_name || "",
+                                        });
+                                    }}
+                                    required
+                                    disabled={teamsLoading}
+                                    className={`border p-3 rounded w-full ${teamsLoading ? "bg-gray-200 text-gray-500 cursor-not-allowed" : "bg-gray-50"
+                                        }`}
+                                >
+                                    <option value="">{teamsLoading ? "Loading teams..." : "Select Opposition Team (required)"}</option>
+                                    {oppositionTeams.map((team) => (
+                                        <option key={team.id} value={team.id}>
+                                            {team.team_name}
+                                        </option>
+                                    ))}
+                                    <option value="__add_new__">+ Add new team</option>
+                                </select>
+                                {addingTeam && (
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="New team name"
+                                            value={newTeamName}
+                                            onChange={(e) => setNewTeamName(e.target.value)}
+                                            className="border p-3 rounded bg-gray-50 flex-1"
+                                            autoFocus
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleAddTeam}
+                                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 font-semibold"
+                                        >
+                                            Add
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                             <select
-                                value={addingTeam ? "__add_new__" : newGame.oppositionTeamId}
-                                onChange={(e) => {
-                                    if (e.target.value === "__add_new__") {
-                                        setAddingTeam(true);
-                                        setNewGame({ ...newGame, oppositionTeamId: "", oppositionName: "" });
-                                        return;
-                                    }
-                                    const team = oppositionTeams.find((item) => item.id === e.target.value);
-                                    setNewGame({
-                                        ...newGame,
-                                        oppositionTeamId: e.target.value,
-                                        oppositionName: team?.team_name || "",
-                                    });
-                                }}
+                                value={newGame.gameTypeId}
+                                onChange={(e) =>
+                                    setNewGame({ ...newGame, gameTypeId: e.target.value })
+                                }
                                 required
-                                className="border p-3 rounded bg-gray-50 w-full"
+                                disabled={typesLoading}
+                                className={`border p-3 rounded ${typesLoading ? "bg-gray-200 text-gray-500 cursor-not-allowed" : "bg-gray-50"
+                                    }`}
                             >
-                                <option value="">Select Opposition Team (required)</option>
-                                {oppositionTeams.map((team) => (
-                                    <option key={team.id} value={team.id}>
-                                        {team.team_name}
+                                <option value="">{typesLoading ? "Loading game types..." : "Select Game Type (required)"}</option>
+                                {gameTypes.map((type) => (
+                                    <option key={type.id} value={type.id}>
+                                        {type.display_name}
                                     </option>
                                 ))}
-                                <option value="__add_new__">+ Add new team</option>
                             </select>
-                            {addingTeam && (
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        placeholder="New team name"
-                                        value={newTeamName}
-                                        onChange={(e) => setNewTeamName(e.target.value)}
-                                        className="border p-3 rounded bg-gray-50 flex-1"
-                                        autoFocus
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={handleAddTeam}
-                                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 font-semibold"
-                                    >
-                                        Add
-                                    </button>
-                                </div>
-                            )}
+                            <input
+                                type="text"
+                                placeholder="Venue (optional)"
+                                value={newGame.venue}
+                                onChange={(e) => setNewGame({ ...newGame, venue: e.target.value })}
+                                className="border p-3 rounded bg-gray-50"
+                            />
+                            <select
+                                value={newGame.location}
+                                onChange={(e) =>
+                                    setNewGame({ ...newGame, location: e.target.value })
+                                }
+                                className="border p-3 rounded bg-gray-50"
+                            >
+                                <option value="">Select Location (optional)</option>
+                                <option value="home">Home</option>
+                                <option value="away">Away</option>
+                            </select>
                         </div>
-                        <select
-                            value={newGame.gameTypeId}
-                            onChange={(e) =>
-                                setNewGame({ ...newGame, gameTypeId: e.target.value })
-                            }
-                            required
-                            className="border p-3 rounded bg-gray-50"
-                        >
-                            <option value="">Select Game Type (required)</option>
-                            {gameTypes.map((type) => (
-                                <option key={type.id} value={type.id}>
-                                    {type.display_name}
-                                </option>
-                            ))}
-                        </select>
-                        <input
-                            type="text"
-                            placeholder="Venue (optional)"
-                            value={newGame.venue}
-                            onChange={(e) => setNewGame({ ...newGame, venue: e.target.value })}
-                            className="border p-3 rounded bg-gray-50"
+                        <textarea
+                            placeholder="Notes (optional)"
+                            value={newGame.notes}
+                            onChange={(e) => setNewGame({ ...newGame, notes: e.target.value })}
+                            className="border p-3 rounded w-full bg-gray-50"
+                            rows={2}
                         />
-                        <select
-                            value={newGame.location}
-                            onChange={(e) =>
-                                setNewGame({ ...newGame, location: e.target.value })
-                            }
-                            className="border p-3 rounded bg-gray-50"
+                        <button
+                            type="submit"
+                            className="bg-salts-blue text-white px-6 py-2 rounded hover:bg-green-700 font-semibold"
                         >
-                            <option value="">Select Location (optional)</option>
-                            <option value="home">Home</option>
-                            <option value="away">Away</option>
-                        </select>
-                    </div>
-                    <textarea
-                        placeholder="Notes (optional)"
-                        value={newGame.notes}
-                        onChange={(e) => setNewGame({ ...newGame, notes: e.target.value })}
-                        className="border p-3 rounded w-full bg-gray-50"
-                        rows={2}
-                    />
-                    <button
-                        type="submit"
-                        className="bg-salts-blue text-white px-6 py-2 rounded hover:bg-green-700 font-semibold"
-                    >
-                        Create Game
-                    </button>
-                </form>
-            </div>
+                            Create Game
+                        </button>
+                    </form>
+                </div>
+            )}
 
             {/* In Progress Games */}
             {activeGames.length > 0 && (

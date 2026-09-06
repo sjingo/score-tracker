@@ -15,8 +15,8 @@ export const Header = () => {
 
 
     return (
-        <header className="bg-salts-blue fixed inset-x-0 top-0 z-10 border-b border-gray-950/5 dark:border-white/10">
-            <div className="flex items-center justify-between flex-wrap pt-2" >
+        <header className="bg-salts-blue  fixed inset-x-0 top-0 z-10 border-b border-gray-950/5 dark:border-white/10">
+            <div className="flex items-center justify-between flex-wrap pt-2 max-w-[1200px] m-auto relative">
                 {/* Logo and Navigation */}
                 <div className="flex w-full px-2 gap-4">
                     <Link
@@ -25,9 +25,9 @@ export const Header = () => {
                         title="Home"
                         className="text-gray-600 transition-colors hover:text-blue-600 mr-auto"
                     >
-                        <HomeIcon className="size-6 stroke-amber-400 dark:stroke-white-500" />
+                        <HomeIcon className="size-6 stroke-amber-200 dark:stroke-white-500" />
                     </Link>
-                    <h1 className=" text-lg font-bold text-amber-400 flex-1">
+                    <h1 className=" text-lg font-bold text-amber-200 flex-1">
                         Lions Score Tracker</h1>
                 </div>
                 {/* User Info */}
@@ -41,9 +41,9 @@ export const Header = () => {
                                     title="My account"
                                     className="text-gray-600 transition-colors hover:text-blue-600"
                                 >
-                                    <UserIcon className="size-6 stroke-amber-400 dark:stroke-white-500" />
+                                    <UserIcon className="size-6 stroke-amber-200 dark:stroke-white-500" />
                                 </Link>
-                                <span className="text-sm text-amber-400">
+                                <span className="text-sm text-amber-200">
                                     {session && session.user.email}
                                 </span>
 
@@ -56,12 +56,11 @@ export const Header = () => {
                         // window.location.href = "/";
                         redirect("/login");
                     }}
-                    className="absolute right-0 text-md bg-amber-400 text-sky-600 text-bold hover:bg-amber-400 transition-colors p-2 h-full top-0"
+                    className="cursor-pointer absolute right-0 text-md bg-amber-200 text-sky-600 text-bold hover:bg-amber-200 transition-colors p-2 h-full top-0"
                 >
-                    <LogoutIcon className="size-6 stroke-sky-600 dark:stroke-white-500" />
+                    <LogoutIcon className="size-6 stroke-sky-600 dark:stroke-white-500 " />
                 </button>
             </div>
-
-        </header>
+        </header >
     );
 }

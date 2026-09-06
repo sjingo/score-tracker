@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { getSessionRole } from "@/lib/authorization";
+import { getGames } from "@/lib/games";
 import AdminDashboard from "@/components/AdminDashboard";
 
 export default async function Home() {
@@ -19,5 +20,7 @@ export default async function Home() {
     );
   }
 
-  return <AdminDashboard />;
+  const initialGames = await getGames();
+
+  return <AdminDashboard initialGames={initialGames} />;
 }

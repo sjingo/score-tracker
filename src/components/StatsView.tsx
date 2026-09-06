@@ -1,15 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useXgStatsQuery } from "@/app/api/stats/useXgStatsQuery";
+import { SyncIcon } from "@/icons/sync";
 
 function formatDate(value: string) {
     return new Date(`${value.slice(0, 10)}T00:00:00Z`).toLocaleDateString();
 }
 
 export default function StatsView() {
+    const queryClient = useQueryClient();
     const [showOnlyGamesWithShots, setShowOnlyGamesWithShots] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
     const { data: games = [], isLoading, isError } = useXgStatsQuery();
+
+    const handleSync = async () => {
+        setIsSyncing(true);
+        await queryClient.invalidateQueries({ queryKey: ["stats", "xg"] });
+        setIsSyncing(false);
+    };
     const visibleGames = showOnlyGamesWithShots
         ? games.filter((game) => game.totalShots > 0)
         : games;
@@ -24,9 +34,20 @@ export default function StatsView() {
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
-            <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-900">Expected goals</h1>
-                <p className="mt-2 text-gray-600">Chance quality compared with actual goals scored.</p>
+            <div className="mb-6 flex items-start justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900">Expected goals</h1>
+                    <p className="mt-2 text-gray-600">Chance quality compared with actual goals scored.</p>
+                </div>
+                <button
+                    onClick={handleSync}
+                    disabled={isSyncing || isLoading}
+                    className="mt-1 inline-flex items-center gap-2 rounded bg-salts-blue p-2 text-white hover:bg-blue-700 disabled:opacity-60"
+                    title="Refresh stats from server"
+                >
+                    <SyncIcon className={`size-5 ${isSyncing ? "animate-spin" : ""}  stroke-amber-200`} />
+                    {isSyncing}
+                </button>
             </div>
 
             <label className="mb-6 flex items-center gap-3 text-sm text-gray-700">

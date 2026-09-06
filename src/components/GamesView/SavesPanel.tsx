@@ -82,7 +82,7 @@ export default function SavesPanel({
                 {saveError && <div className="bg-red-100 text-red-700 p-2 rounded mb-2 text-sm">{saveError}</div>}
                 <div className="flex gap-2">
                     <GameSaveSelect
-                        activePlayers={activePlayers}
+                        activePlayers={activePlayers.filter((player) => !saves.some((save) => save.player_id === player.id))}
                         gameId={game.id}
                         id={`game-save-player-${game.id}`}
                         name={`game-save-player-${game.id}`}

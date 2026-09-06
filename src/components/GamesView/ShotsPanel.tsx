@@ -44,7 +44,21 @@ export default function ShotsPanel({
             {isExpanded && (
                 <div id={`${game.id}-shots-panel`} className="bg-teal-50 p-3 rounded">
                     {shotError && <div className="bg-red-100 text-red-700 p-2 rounded mb-2 text-sm">{shotError}</div>}
-                    <div className="mb-4 space-y-2">
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                        {SHOT_OPTIONS.map((option) => (
+                            <button
+                                key={option.type}
+                                type="button"
+                                disabled={isPending}
+                                onClick={() => onRecordShot(option.type)}
+                                className="rounded bg-teal-700 px-3 py-3 text-sm font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                <span className="block">{option.label}</span>
+                                <span className="block text-xs font-normal">{option.xg.toFixed(2)} xG</span>
+                            </button>
+                        ))}
+                    </div>
+                    <div className="space-y-2">
                         {isLoading ? <p className="text-sm text-gray-600">Loading shots...</p> : null}
                         {!isLoading && shots.length === 0 ? <p className="text-sm italic text-gray-600">No shots recorded</p> : null}
                         {shots.map((shot, index) => {
@@ -84,20 +98,6 @@ export default function ShotsPanel({
                                 </div>
                             );
                         })}
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                        {SHOT_OPTIONS.map((option) => (
-                            <button
-                                key={option.type}
-                                type="button"
-                                disabled={isPending}
-                                onClick={() => onRecordShot(option.type)}
-                                className="rounded bg-teal-700 px-3 py-3 text-sm font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                <span className="block">{option.label}</span>
-                                <span className="block text-xs font-normal">{option.xg.toFixed(2)} xG</span>
-                            </button>
-                        ))}
                     </div>
                 </div>
             )}

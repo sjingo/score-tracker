@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useSession, authClient } from "@/lib/auth-client";
+import Link from "next/link";
 
 export default function AccountPage() {
     const { data: session } = useSession();
@@ -54,6 +55,13 @@ export default function AccountPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-8">
             <div className="mx-auto max-w-xl rounded-lg bg-white p-6 shadow-lg sm:p-8">
+                <div className="mb-6 flex items-center justify-between">
+                    <Link href="/"
+                        className="text-blue-500 hover:text-blue-700"
+                    >
+                        &larr; back
+                    </Link>
+                </div>
                 <h1 className="text-2xl font-bold text-gray-900">My Account</h1>
                 <p className="mt-2 text-sm text-gray-600">
                     Signed in as {session?.user.email}
