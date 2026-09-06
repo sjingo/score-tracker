@@ -1,24 +1,38 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Game, GameType } from '../types';
+import { useQueryClient } from "@tanstack/react-query";
 import { useGamesQuery } from "@/app/api/games/hooks/useGamesQuery";
 import { useGameTypesQuery } from "@/app/api/game-types/hooks/useGameTypesQuery";
+import { SyncIcon } from "@/icons/sync";
 import LeagueTable from './LeagueTable';
 import MatchResults from './MatchResults';
 
-export default function MatchesView() {
+interface MatchesViewProps {
+    isActive?: boolean;
+}
+
+export default function MatchesView({ isActive = true }: MatchesViewProps) {
+    const queryClient = useQueryClient();
     // React Query hooks - data fetched with 10 minute stale time
-    const { data: gamesData = [], isLoading: gamesLoading } = useGamesQuery();
-    const { data: gameTypesData = [], isLoading: typesLoading } = useGameTypesQuery();
+    const { data: games = [], isLoading: gamesLoading } = useGamesQuery(undefined, isActive);
+    const { data: gameTypes = [], isLoading: typesLoading } = useGameTypesQuery(isActive);
 
     // Local state for UI interactions
-    const [games, setGames] = useState<Game[]>(gamesData);
-    const [gameTypes, setGameTypes] = useState<GameType[]>(gameTypesData);
     const [selectedGameTypeId, setSelectedGameTypeId] = useState<string | null>(null);
-    const [error, setError] = useState<string | null>(null);
+    const [error] = useState<string | null>(null);
+    const [isSyncing, setIsSyncing] = useState(false);
 
     const loading = gamesLoading || typesLoading;
+
+    const handleSync = async () => {
+        setIsSyncing(true);
+        await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ["games"] }),
+            queryClient.invalidateQueries({ queryKey: ["gameTypes"] }),
+        ]);
+        setIsSyncing(false);
+    };
 
     // Group games by game type if a filter is selected
     const displayData = useMemo(() => {
@@ -57,9 +71,20 @@ export default function MatchesView() {
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
             {/* Header */}
-            <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">📊 Match Results</h1>
+            <div className="mb-6 flex items-center justify-between gap-4">
+                <h1 className="text-3xl font-bold text-gray-900">📊 Match Results</h1>
+                <button
+                    onClick={handleSync}
+                    disabled={isSyncing || loading}
+                    className="inline-flex items-center gap-2 rounded bg-salts-blue p-2 text-white hover:bg-blue-700 disabled:opacity-60"
+                    title="Refresh matches from server"
+                >
+                    <SyncIcon className={`stroke-amber-200 size-5 ${isSyncing ? "animate-spin" : ""}`} />
+                    {isSyncing}
+                </button>
+            </div>
 
+            <div className="mb-6">
                 {error && (
                     <div className="p-4 bg-red-50 text-red-700 rounded-lg mb-4">
                         {error}

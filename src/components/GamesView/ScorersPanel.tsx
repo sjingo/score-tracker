@@ -130,7 +130,7 @@ export default function ScorersPanel({
                         className="basis-1/2 border p-2 rounded bg-white"
                     >
                         <option value="">Select player...</option>
-                        {activePlayers.map((player) => (
+                        {activePlayers.filter((player) => !scorers.some((scorer) => scorer.player_id === player.id)).map((player) => (
                             <option key={player.id} value={player.id}>
                                 {player.name}
                                 {player.jersey_number ? ` (#${player.jersey_number})` : ""}

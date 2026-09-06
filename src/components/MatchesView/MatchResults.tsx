@@ -24,11 +24,10 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
         }
     };
 
-    const truncateScorers = (scorers: Array<{ player_name?: string; anonymised_id?: string; goal_count?: number; assist_count?: number; save_count?: number }>, maxLines: number = 2) => {
+    const truncateScorers = (scorers: Array<{ player_name?: string; anonymised_id?: string; goal_count?: number; assist_count?: number; save_count?: number }>) => {
         if (!scorers || scorers.length === 0) return [];
-        // Simple truncation: assume ~2 scorers per line at small font
-        const maxItems = maxLines * 2;
-        return scorers.slice(0, maxItems);
+        // Show all scorers - no truncation
+        return scorers;
     };
 
     return (
@@ -62,9 +61,9 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                             const scorers = truncateScorers(match.scorers || []);
                             const assists = truncateScorers(match.assists || []);
                             const saves = truncateScorers(match.saves || []);
-                            const hasMoreScorers = (match.scorers?.length || 0) > 4;
-                            const hasMoreAssists = (match.assists?.length || 0) > 4;
-                            const hasMoreSaves = (match.saves?.length || 0) > 4;
+                            const hasMoreScorers = false;
+                            const hasMoreAssists = false;
+                            const hasMoreSaves = false;
 
                             return (
                                 <tr key={match.id} className="hover:bg-gray-50">
@@ -92,7 +91,7 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="text-xs text-gray-700 leading-relaxed max-h-12 overflow-hidden">
+                                        <div className="text-xs text-gray-700 leading-relaxed">
                                             {scorers.length > 0 ? (
                                                 <div>
                                                     {scorers.map((scorer, idx) => (
@@ -111,7 +110,7 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="text-xs text-gray-700 leading-relaxed max-h-12 overflow-hidden">
+                                        <div className="text-xs text-gray-700 leading-relaxed">
                                             {assists.length > 0 ? (
                                                 <div>
                                                     {assists.map((assist, idx) => (
@@ -130,7 +129,7 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="text-xs text-gray-700 leading-relaxed max-h-12 overflow-hidden">
+                                        <div className="text-xs text-gray-700 leading-relaxed">
                                             {saves.length > 0 ? (
                                                 <div>
                                                     {saves.map((save, idx) => (

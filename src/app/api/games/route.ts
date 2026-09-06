@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getGames } from "@/lib/games";
 import { randomUUID } from "crypto";
-import { Row } from "@libsql/client";
 import { requireRole } from "@/lib/authorization";
 
 // ============================================================================
 // GET all games for Lions team (with game_types and scorers)
 // ============================================================================
-interface EnrichedGame {
-  scorers: Row[];
-  length: number;
-}
 export async function GET(request: NextRequest) {
   console.log("[GET /api/games] Fetching all games for Lions team");
 
@@ -18,84 +14,15 @@ export async function GET(request: NextRequest) {
     const authorization = await requireRole(request, "admin");
     if (authorization instanceof Response) return authorization;
 
-    // Get Lions team ID
-    const teamsResult = await db().execute(
-      "SELECT id FROM teams WHERE team_name = 'Lions'",
-    );
-
-    if (teamsResult.rows.length === 0) {
-      console.error("[GET /api/games] Lions team not found");
-      return NextResponse.json(
-        { success: false, error: "Lions team not found" },
-        { status: 404 },
-      );
-    }
-
-    const lionsTeamId = teamsResult.rows[0].id;
-    console.log(`[GET /api/games] Lions team ID: ${lionsTeamId}`);
-
-    // Fetch all games with game_types
-    const gamesResult = await db().execute(
-      `SELECT g.*, gt.display_name as game_type_display, gt.color as game_type_color
-       FROM games g
-       JOIN game_types gt ON g.game_type_id = gt.id
-       WHERE g.team_id = ?
-       ORDER BY g.match_date DESC`,
-      [lionsTeamId],
-    );
-
-    console.log(`[GET /api/games] Retrieved ${gamesResult.rows.length} games`);
-
-    // Enrich each game with scorers and assists
-    const enrichedGames = await Promise.all(
-      //@ts-expect-error TODO: type EnrichedGame
-      gamesResult.rows.map(async (game: EnrichedGame[]) => {
-        const scorersResult = await db().execute(
-          `SELECT gs.*, p.anonymised_id
-          FROM game_scorers gs
-          LEFT JOIN players p ON gs.player_id = p.id
-          WHERE gs.game_id = ?
-          ORDER BY gs.goal_count DESC`,
-          // @ts-expect-error TODO: type EnrichedGame
-          [game.id],
-        );
-
-        const assistsResult = await db().execute(
-          `SELECT ga.*, p.anonymised_id
-          FROM game_assists ga
-          LEFT JOIN players p ON ga.player_id = p.id
-          WHERE ga.game_id = ?
-          ORDER BY ga.assist_count DESC`,
-          // @ts-expect-error TODO: type EnrichedGame
-          [game.id],
-        );
-
-        const savesResult = await db().execute(
-          `SELECT gs.*, p.anonymised_id
-          FROM game_saves gs
-          LEFT JOIN players p ON gs.player_id = p.id
-          WHERE gs.game_id = ?
-          ORDER BY gs.save_count DESC`,
-          // @ts-expect-error TODO: type EnrichedGame
-          [game.id],
-        );
-
-        return {
-          ...game,
-          scorers: scorersResult.rows || [],
-          assists: assistsResult.rows || [],
-          saves: savesResult.rows || [],
-        };
-      }),
-    );
+    const games = await getGames();
 
     console.log(
-      `[GET /api/games] Response: ${enrichedGames.length} games with scorers`,
+      `[GET /api/games] Response: ${games.length} games with scorers`,
     );
 
     return NextResponse.json({
       success: true,
-      data: enrichedGames,
+      data: games,
     });
   } catch (error) {
     console.error("[GET /api/games] Error:", error);

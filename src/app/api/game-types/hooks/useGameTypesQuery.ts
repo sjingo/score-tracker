@@ -9,9 +9,10 @@ async function fetchGameTypes(): Promise<GameType[]> {
   return data.data || [];
 }
 
-export function useGameTypesQuery() {
+export function useGameTypesQuery(enabled = true) {
   return useQuery({
     queryKey: ["gameTypes"],
     queryFn: fetchGameTypes,
+    enabled,
   });
 }

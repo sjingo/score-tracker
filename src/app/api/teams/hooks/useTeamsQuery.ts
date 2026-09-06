@@ -9,9 +9,10 @@ async function fetchTeams(): Promise<Team[]> {
   return data.data || [];
 }
 
-export function useTeamsQuery() {
+export function useTeamsQuery(enabled = true) {
   return useQuery({
     queryKey: ["teams"],
     queryFn: fetchTeams,
+    enabled,
   });
 }

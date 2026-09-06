@@ -9,9 +9,11 @@ async function fetchGames(): Promise<Game[]> {
   return data.data || [];
 }
 
-export function useGamesQuery() {
+export function useGamesQuery(initialData?: Game[], enabled = true) {
   return useQuery({
     queryKey: ["games"],
     queryFn: fetchGames,
+    initialData,
+    enabled,
   });
 }
