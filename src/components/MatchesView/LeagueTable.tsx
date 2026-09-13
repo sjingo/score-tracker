@@ -1,4 +1,5 @@
 import { Game, GameType } from '../types';
+import MatchForm from './MatchForm';
 
 interface LeagueTableProps {
     matches: Game[];
@@ -14,7 +15,6 @@ interface LeagueStats {
     goalsFor: number;
     goalsAgainst: number;
     goalDifference: number;
-    form: Array<{ result: 'W' | 'D' | 'L'; date: string }>;
 }
 
 function calculateStats(matches: Game[]): LeagueStats {
@@ -39,23 +39,6 @@ function calculateStats(matches: Game[]): LeagueStats {
         }
     });
 
-    // Get last 5 results for form
-    const sorted = [...completed].sort(
-        (a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime()
-    );
-
-    const form = sorted.slice(0, 5).map((match) => {
-        let result: 'W' | 'D' | 'L';
-        if (match.score_for > match.score_against) {
-            result = 'W';
-        } else if (match.score_for === match.score_against) {
-            result = 'D';
-        } else {
-            result = 'L';
-        }
-        return { result, date: match.match_date };
-    });
-
     return {
         played: completed.length,
         won,
@@ -64,7 +47,6 @@ function calculateStats(matches: Game[]): LeagueStats {
         goalsFor,
         goalsAgainst,
         goalDifference: goalsFor - goalsAgainst,
-        form,
     };
 }
 
@@ -78,17 +60,6 @@ export default function LeagueTable({ matches, gameType, teamName = 'Lions' }: L
             </div>
         );
     }
-
-    const getFormColor = (result: 'W' | 'D' | 'L') => {
-        switch (result) {
-            case 'W':
-                return 'bg-salts-blue';
-            case 'D':
-                return 'bg-amber-500';
-            case 'L':
-                return 'bg-red-500';
-        }
-    };
 
     return (
         <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -131,22 +102,7 @@ export default function LeagueTable({ matches, gameType, teamName = 'Lions' }: L
                                 {stats.goalDifference > 0 ? '+' : ''}{stats.goalDifference}
                             </td>
                             <td className="px-6 py-4">
-                                <div className="flex gap-1">
-                                    {stats.form?.reverse()?.map((f, i) => (
-                                        <div
-                                            key={i}
-                                            className={`w-7 h-7 rounded flex items-center justify-center text-xs font-bold text-white ${getFormColor(
-                                                f.result
-                                            )}`}
-                                            title={new Date(f.date).toLocaleDateString('en-US', {
-                                                month: 'short',
-                                                day: 'numeric',
-                                            })}
-                                        >
-                                            {f.result}
-                                        </div>
-                                    ))}
-                                </div>
+                                <MatchForm matches={matches} />
                             </td>
                         </tr>
                     </tbody>

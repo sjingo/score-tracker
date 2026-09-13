@@ -7,6 +7,8 @@ import { useGameTypesQuery } from "@/app/api/game-types/hooks/useGameTypesQuery"
 import { SyncIcon } from "@/icons/sync";
 import LeagueTable from './LeagueTable';
 import MatchResults from './MatchResults';
+import MatchForm from '@/components/MatchesView/MatchForm';
+import StatsSummary from './StatsSummary';
 
 interface MatchesViewProps {
     isActive?: boolean;
@@ -87,42 +89,12 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
         .filter((game) => game.status === 'completed')
         .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime());
 
-    const filteredCompletedGames: number = useMemo(() => {
-        const filtered = selectedGameTypeId
-            ? completedGames.filter((game) => game.game_type_id === selectedGameTypeId)
-            : completedGames;
-        return filtered.length ?? 0;
-    }, [selectedGameTypeId, completedGames]);
+    const filteredCompletedGames = useMemo(() => selectedGameTypeId
+        ? completedGames.filter((game) => game.game_type_id === selectedGameTypeId)
+        : completedGames, [completedGames, selectedGameTypeId]);
 
-    const filteredGoalsFor: number = useMemo(() => {
-        const filtered = selectedGameTypeId
-            ? completedGames.filter((game) => game.game_type_id === selectedGameTypeId)
-            : completedGames;
-        return filtered.reduce((sum, game) => sum + game.score_for, 0) ?? 0;
-    }, [selectedGameTypeId, completedGames]);
-
-    const filteredGoalsAgainst: number = useMemo(() => {
-        const filtered = selectedGameTypeId
-            ? completedGames.filter((game) => game.game_type_id === selectedGameTypeId)
-            : completedGames;
-        return filtered.reduce((sum, game) => sum + game.score_against, 0) ?? 0;
-    }, [selectedGameTypeId, completedGames]);
-
-    const renderForm = (count: number) => completedGames
-        .slice(0, count)
-        .reverse()
-        .map((game) => {
-            const result = game.score_for > game.score_against
-                ? { text: 'W', color: 'bg-green-200' }
-                : game.score_for === game.score_against
-                    ? { text: 'D', color: 'bg-amber-200' }
-                    : { text: 'L', color: 'bg-red-200' };
-            return (
-                <span key={game.id} className={`inline-block px-3 mx-1 py-1 rounded text-xs font-bold ${result.color}`}>
-                    {result.text}
-                </span>
-            );
-        });
+    const filteredGoalsFor = filteredCompletedGames.reduce((sum, game) => sum + game.score_for, 0);
+    const filteredGoalsAgainst = filteredCompletedGames.reduce((sum, game) => sum + game.score_against, 0);
 
     if (loading) {
         return (
@@ -205,31 +177,13 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
                 </div>
 
                 {/* Stats Summary */}
-                <div className="grid grid-cols-2 gap-4 mb-2 md:grid-cols-4">
-                    <div className="bg-salts-blue rounded-lg shadow p-2 flex items-center gap-2">
-                        <span className="text-2xl font-bold text-amber-200">
-                            {filteredCompletedGames}
-                        </span>
-                        <span className="text-blue-100 text-sm">{" "}Matches </span>
-                    </div>
-                    <div className="bg-salts-blue rounded-lg shadow p-2 flex items-center gap-2">
-                        <span className="text-xl font-bold text-amber-200">
-                            {filteredGoalsFor}
-                        </span>
-                        <span className="text-blue-100 text-sm">{" "}Scored</span>
-                    </div>
-                    <div className="bg-salts-blue rounded-lg shadow p-2 flex items-center gap-2">
-                        <span className="text-2xl font-bold text-amber-200">
-                            {filteredGoalsAgainst}
-                        </span>
-                        <span className="text-blue-100 text-sm">{" "}Conceded</span>
-                    </div>
-                    <div className="bg-salts-blue rounded-lg shadow p-2 flex justify-center gap-2">
-                        <div className="flex flex-wrap items-center gap-1">
-                            <div>{renderForm(4)}</div>
-                        </div>
-                    </div>
-                </div>
+                <StatsSummary
+                    completedGames={filteredCompletedGames.length}
+                    goalsFor={filteredGoalsFor}
+                    goalsAgainst={filteredGoalsAgainst}
+                >
+                    <MatchForm matches={filteredGames} />
+                </StatsSummary>
             </div>
 
             {/* Tables and Results */}
