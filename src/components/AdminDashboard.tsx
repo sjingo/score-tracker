@@ -83,7 +83,7 @@ export default function AdminDashboard({ initialGames }: { initialGames: Game[] 
                     />
                 )}
                 {activeTab === "matches" && <MatchesView isActive={activeTab === "matches"} />}
-                {activeTab === "stats" && <StatsView />}
+                {activeTab === "stats" && <StatsView initialGames={initialGames} />}
                 {activeTab === "players" && <PlayersView />}
             </div>
 
