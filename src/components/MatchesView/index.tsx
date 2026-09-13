@@ -4,11 +4,12 @@ import { useState, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useGamesQuery } from "@/app/api/games/hooks/useGamesQuery";
 import { useGameTypesQuery } from "@/app/api/game-types/hooks/useGameTypesQuery";
-import { SyncIcon } from "@/icons/sync";
+import SyncButton from "@/components/SyncButton";
 import LeagueTable from './LeagueTable';
 import MatchResults from './MatchResults';
 import MatchForm from '@/components/MatchesView/MatchForm';
 import StatsSummary from './StatsSummary';
+import { useMatchFilters } from '@/components/MatchesView/useMatchFilters';
 
 interface MatchesViewProps {
     isActive?: boolean;
@@ -30,9 +31,12 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
         error: gameTypesQueryError,
     } = useGameTypesQuery(isActive);
 
-    // Local state for UI interactions
-    const [selectedGameTypeId, setSelectedGameTypeId] = useState<string | null>(null);
-    const [oppositionSearch, setOppositionSearch] = useState('');
+    const {
+        gameTypeId: selectedGameTypeId,
+        oppositionSearch,
+        setGameTypeId: setSelectedGameTypeId,
+        setOppositionSearch,
+    } = useMatchFilters();
     const [isSyncing, setIsSyncing] = useState(false);
 
     const loading = gamesLoading || typesLoading;
@@ -85,13 +89,9 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
         ];
     }, [filteredGames, gameTypes, selectedGameTypeId]);
 
-    const completedGames = [...games]
+    const filteredCompletedGames = useMemo(() => filteredGames
         .filter((game) => game.status === 'completed')
-        .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime());
-
-    const filteredCompletedGames = useMemo(() => selectedGameTypeId
-        ? completedGames.filter((game) => game.game_type_id === selectedGameTypeId)
-        : completedGames, [completedGames, selectedGameTypeId]);
+        .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime()), [filteredGames]);
 
     const filteredGoalsFor = filteredCompletedGames.reduce((sum, game) => sum + game.score_for, 0);
     const filteredGoalsAgainst = filteredCompletedGames.reduce((sum, game) => sum + game.score_against, 0);
@@ -119,15 +119,12 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
             {/* Header */}
             <div className="mb-6 flex items-center justify-between gap-4">
                 <h1 className="text-3xl font-bold text-gray-900">📊 Match Results</h1>
-                <button
+                <SyncButton
                     onClick={handleSync}
                     disabled={isSyncing || loading}
-                    className="inline-flex items-center gap-2 rounded p-2 text-white disabled:opacity-60"
                     title="Refresh matches from server"
-                >
-                    <SyncIcon className={` stroke-salts-blue size-10 ${isSyncing ? "animate-spin" : ""}`} />
-                    {isSyncing}
-                </button>
+                    isSyncing={isSyncing}
+                />
             </div>
 
             <div className="mb-6">

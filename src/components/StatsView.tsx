@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useXgStatsQuery } from "@/app/api/stats/useXgStatsQuery";
 import { useGamesQuery } from "@/app/api/games/hooks/useGamesQuery";
 import { Game } from "@/components/types";
-import { SyncIcon } from "@/icons/sync";
+import SyncButton from "@/components/SyncButton";
 
 function formatDate(value: string) {
     return new Date(`${value.slice(0, 10)}T00:00:00Z`).toLocaleDateString();
@@ -156,15 +156,12 @@ export default function StatsView({ initialGames }: { initialGames?: Game[] }) {
                     )}
                     <p className="mt-2 text-gray-600">Overview and details of all team xg and player stats.</p>
                 </div>
-                <button
+                <SyncButton
                     onClick={handleSync}
                     disabled={isSyncing || isLoading}
-                    className="mt-1 inline-flex items-center gap-2 rounded bg-salts-blue p-2 text-white hover:bg-blue-700 disabled:opacity-60"
                     title="Refresh stats from server"
-                >
-                    <SyncIcon className={`size-5 ${isSyncing ? "animate-spin" : ""}  stroke-amber-200`} />
-                    {isSyncing}
-                </button>
+                    isSyncing={isSyncing}
+                />
             </div>
 
             <section className="mb-6 rounded-lg bg-salts-blue p-6 text-white shadow">
