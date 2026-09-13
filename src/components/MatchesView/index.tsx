@@ -20,6 +20,7 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
 
     // Local state for UI interactions
     const [selectedGameTypeId, setSelectedGameTypeId] = useState<string | null>(null);
+    const [oppositionSearch, setOppositionSearch] = useState('');
     const [error] = useState<string | null>(null);
     const [isSyncing, setIsSyncing] = useState(false);
 
@@ -34,14 +35,25 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
         setIsSyncing(false);
     };
 
-    // Group games by game type if a filter is selected
+    const filteredGames = useMemo(() => {
+        const normalizedSearch = oppositionSearch.trim().toLowerCase();
+
+        return games.filter((game) => {
+            const matchesType = !selectedGameTypeId || game.game_type_id === selectedGameTypeId;
+            const matchesOpposition = !normalizedSearch || game.opposition_name.toLowerCase().includes(normalizedSearch);
+
+            return matchesType && matchesOpposition;
+        });
+    }, [games, oppositionSearch, selectedGameTypeId]);
+
+    // Group filtered games by game type if a filter is selected
     const displayData = useMemo(() => {
         if (!selectedGameTypeId) {
             // Show all games in one table, sorted chronologically
             return [
                 {
                     gameType: null,
-                    matches: games,
+                    matches: filteredGames,
                 },
             ];
         }
@@ -53,12 +65,10 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
         return [
             {
                 gameType,
-                matches: games.filter(
-                    (g) => g.game_type_id === selectedGameTypeId
-                ),
+                matches: filteredGames,
             },
         ];
-    }, [games, gameTypes, selectedGameTypeId]);
+    }, [filteredGames, gameTypes, selectedGameTypeId]);
 
     const completedGames = [...games]
         .filter((game) => game.status === 'completed')
@@ -132,6 +142,21 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
                                     </option>
                                 ))}
                             </select>
+                        </div>
+
+                        {/* Opposition Filter */}
+                        <div>
+                            <label htmlFor="opposition-search" className="block text-sm font-medium text-gray-700 mb-2">
+                                Search Opposition
+                            </label>
+                            <input
+                                id="opposition-search"
+                                type="search"
+                                value={oppositionSearch}
+                                onChange={(e) => setOppositionSearch(e.target.value)}
+                                placeholder="Search team name"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-salts-blue"
+                            />
                         </div>
                     </div>
                 </div>
