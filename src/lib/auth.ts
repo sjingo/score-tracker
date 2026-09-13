@@ -1,5 +1,5 @@
 export const AUTH_ROLES = ["admin", "user"];
-export type AuthRole = (typeof AUTH_ROLES)[number];
+export type AuthRole = "admin" | "user";
 
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
