@@ -122,16 +122,6 @@ export default function AssistsPanel({
                             </option>
                         ))}
                     </select>
-                    <div className="flex items-center gap-2 basis-1/2">
-                        <PlusIcon
-                            className="w-10 h-10 text-purple-600"
-                            onClick={() => onRecordAssist(game.id, 1)}
-                        />
-                        <MinusIcon
-                            className="w-10 h-10 text-red-600"
-                            onClick={() => onRecordAssist(game.id, -1)}
-                        />
-                    </div>
                 </div>
             </div>
         </>

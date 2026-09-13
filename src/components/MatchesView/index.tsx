@@ -60,6 +60,27 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
         ];
     }, [games, gameTypes, selectedGameTypeId]);
 
+    const completedGames = [...games]
+        .filter((game) => game.status === 'completed')
+        .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime());
+
+    const renderForm = (count: number) => completedGames
+        .slice(0, count)
+        .reverse()
+        .map((game) => {
+            const result = game.score_for > game.score_against
+                ? { text: 'W', color: 'bg-green-100 text-green-700' }
+                : game.score_for === game.score_against
+                    ? { text: 'D', color: 'bg-amber-100 text-amber-700' }
+                    : { text: 'L', color: 'bg-red-100 text-red-700' };
+
+            return (
+                <span key={game.id} className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${result.color}`}>
+                    {result.text}
+                </span>
+            );
+        });
+
     if (loading) {
         return (
             <div className="max-w-6xl mx-auto px-4 py-8">
@@ -116,24 +137,32 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
                 </div>
 
                 {/* Stats Summary */}
-                <div className="grid grid-cols-3 gap-4 mb-6">
-                    <div className="bg-white rounded-lg shadow p-4">
-                        <div className="text-gray-600 text-sm">Completed Matches</div>
-                        <div className="text-2xl font-bold text-gray-900">
+                <div className="grid grid-cols-2 gap-4 mb-2 md:grid-cols-4">
+                    <div className="bg-white rounded-lg shadow p-2 flex items-center gap-2">
+                        <span className="text-2xl font-bold text-gray-900">
                             {games.filter((g) => g.status === 'completed').length}
-                        </div>
+                        </span>
+                        <span className="text-gray-600 text-sm">{" "}Matches </span>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4">
-                        <div className="text-gray-600 text-sm">Total Goals For</div>
-                        <div className="text-2xl font-bold text-green-600">
+                    <div className="bg-white rounded-lg shadow p-2 flex items-center gap-2">
+                        <span className="text-xl font-bold text-green-600">
                             {games.reduce((sum, g) => sum + g.score_for, 0)}
-                        </div>
+                        </span>
+                        <span className="text-gray-600 text-sm">{" "}Scored</span>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4">
-                        <div className="text-gray-600 text-sm">Total Goals Against</div>
-                        <div className="text-2xl font-bold text-red-600">
+                    <div className="bg-white rounded-lg shadow p-2 flex items-center gap-2">
+                        <span className="text-2xl font-bold text-red-600">
                             {games.reduce((sum, g) => sum + g.score_against, 0)}
-                        </div>
+                        </span>
+                        <span className="text-gray-600 text-sm">{" "}Conceded</span>
+                    </div>
+                    <div className="bg-white rounded-lg shadow p-2 flex items-center gap-2">
+                        <span className="flex flex-wrap items-center gap-1">
+                            <span className="md:hidden">{renderForm(2)}</span>
+                            <span className="hidden md:inline lg:hidden">{renderForm(3)}</span>
+                            <span className="hidden lg:inline">{renderForm(5)}</span>
+                        </span>
+                        <span className="text-gray-600 text-sm">{" "}Form</span>
                     </div>
                 </div>
             </div>

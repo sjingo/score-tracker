@@ -753,6 +753,7 @@ export default function GamesView({ initialGames, onInProgressGameChange }: Game
                                     onSelectPlayer={(gameId, playerId) => {
                                         setSelectedGame(gameId);
                                         setSelectedPlayer(playerId);
+                                        void handleRecordGoal(gameId, 1, playerId);
                                     }}
                                     onRecordGoal={handleRecordGoal}
                                     onDeleteScorer={handleDeleteScorer}
@@ -767,6 +768,7 @@ export default function GamesView({ initialGames, onInProgressGameChange }: Game
                                     onSelectPlayer={(gameId, playerId) => {
                                         setSelectedAssistGame(gameId);
                                         setSelectedAssistPlayer(playerId);
+                                        void handleRecordAssist(gameId, 1, playerId);
                                     }}
                                     onRecordAssist={handleRecordAssist}
                                     onDeleteAssist={handleDeleteAssist}
@@ -781,6 +783,7 @@ export default function GamesView({ initialGames, onInProgressGameChange }: Game
                                     onSelectPlayer={(gameId, playerId) => {
                                         setSelectedSaveGame(gameId);
                                         setSelectedSavePlayer(playerId);
+                                        void handleRecordSave(gameId, 1, playerId);
                                     }}
                                     onRecordSave={handleRecordSave}
                                     onDeleteSave={handleDeleteSave}

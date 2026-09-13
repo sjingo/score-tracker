@@ -132,7 +132,7 @@ export default function LeagueTable({ matches, gameType, teamName = 'Lions' }: L
                             </td>
                             <td className="px-6 py-4">
                                 <div className="flex gap-1">
-                                    {stats.form.map((f, i) => (
+                                    {stats.form?.reverse()?.map((f, i) => (
                                         <div
                                             key={i}
                                             className={`w-7 h-7 rounded flex items-center justify-center text-xs font-bold text-white ${getFormColor(
