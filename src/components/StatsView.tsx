@@ -57,20 +57,29 @@ export default function StatsView({ initialGames }: { initialGames?: Game[] }) {
         assists: true,
         saves: true,
     });
-    const { data: games = [], isLoading, isError } = useXgStatsQuery();
+    const {
+        data: games = [],
+        isLoading,
+        isError,
+        error: xgQueryError,
+    } = useXgStatsQuery();
     const {
         data: gamesWithPlayerStats = [],
         isLoading: isLoadingPlayerStats,
         isError: isPlayerStatsError,
+        error: playerStatsQueryError,
     } = useGamesQuery(initialGames);
 
     const handleSync = async () => {
         setIsSyncing(true);
-        await Promise.all([
-            queryClient.invalidateQueries({ queryKey: ["stats", "xg"] }),
-            queryClient.invalidateQueries({ queryKey: ["games"] }),
-        ]);
-        setIsSyncing(false);
+        try {
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ["stats", "xg"] }),
+                queryClient.invalidateQueries({ queryKey: ["games"] }),
+            ]);
+        } finally {
+            setIsSyncing(false);
+        }
     };
     const visibleGames = showOnlyGamesWithShots
         ? games.filter((game) => game.totalShots > 0)
@@ -126,7 +135,11 @@ export default function StatsView({ initialGames }: { initialGames?: Game[] }) {
         return <div className="max-w-6xl mx-auto px-4 py-8 text-gray-500">Loading stats...</div>;
     }
 
-    if (isError || isPlayerStatsError) {
+    const hasFatalError = (isError && games.length === 0)
+        || (isPlayerStatsError && gamesWithPlayerStats.length === 0);
+    const refreshError = xgQueryError?.message || playerStatsQueryError?.message;
+
+    if (hasFatalError) {
         return <div className="max-w-6xl mx-auto px-4 py-8 text-red-700">Failed to load xG stats.</div>;
     }
 
@@ -135,6 +148,12 @@ export default function StatsView({ initialGames }: { initialGames?: Game[] }) {
             <div className="mb-6 flex items-start justify-between">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">Stats</h1>
+
+                    {refreshError && (
+                        <div className="mb-6 rounded border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                            Refresh failed. Showing the last loaded stats. {refreshError}
+                        </div>
+                    )}
                     <p className="mt-2 text-gray-600">Overview and details of all team xg and player stats.</p>
                 </div>
                 <button

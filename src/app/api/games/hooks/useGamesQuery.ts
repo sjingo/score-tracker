@@ -6,6 +6,11 @@ import { Game } from "@/components/types";
 async function fetchGames(): Promise<Game[]> {
   const response = await fetch("/api/games");
   const data = await response.json();
+
+  if (!response.ok || !data.success) {
+    throw new Error(data.error || "Failed to load games");
+  }
+
   return data.data || [];
 }
 

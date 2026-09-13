@@ -72,12 +72,17 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
+    const isAllowedUserRequest =
+      request.method === "GET" &&
+      ["/api/games", "/api/game-types", "/api/stats/xg"].includes(pathname);
+    const isSignOutRequest =
+      request.method === "POST" && pathname === "/api/proxy/sign-out";
+
     if (
       getSessionRole(session) !== "admin" &&
-      (pathname.startsWith("/api/games") ||
-        pathname.startsWith("/api/players") ||
-        pathname.startsWith("/api/game-types") ||
-        pathname.startsWith("/api/stats"))
+      !isAllowedUserRequest &&
+      !isSignOutRequest &&
+      pathname.startsWith("/api/")
     ) {
       return NextResponse.json(
         { success: false, error: "Forbidden" },

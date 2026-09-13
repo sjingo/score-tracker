@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireRole } from "@/lib/authorization";
+import { requireAuthenticated } from "@/lib/authorization";
 
 // GET all game types for Lions team
 export async function GET(request: NextRequest) {
   try {
-    const authorization = await requireRole(request, "admin");
+    const authorization = await requireAuthenticated(request);
     if (authorization instanceof Response) return authorization;
 
     // Get Lions team ID
