@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from 'react';
 import { Game, GameType } from '../types';
 
 interface MatchResultsProps {
@@ -6,6 +9,9 @@ interface MatchResultsProps {
 }
 
 export default function MatchResults({ matches, gameType }: MatchResultsProps) {
+    const [selectedMatch, setSelectedMatch] = useState<Game | null>(null);
+    const [copied, setCopied] = useState(false);
+
     const completed = [...matches]
         .filter((m) => m.status === 'completed')
         .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime());
@@ -28,6 +34,68 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
         if (!scorers || scorers.length === 0) return [];
         // Show all scorers - no truncation
         return scorers;
+    };
+
+    const formatPlayers = (players: Array<{ player_name?: string; anonymised_id?: string; goal_count?: number; assist_count?: number; save_count?: number }> | undefined, countKey: 'goal_count' | 'assist_count' | 'save_count') => {
+        if (!players || players.length === 0) return 'None';
+
+        return players
+            .map((player) => {
+                const name = player.player_name || player.anonymised_id || 'Unknown player';
+                const count = player[countKey];
+                return count && count > 1 ? `${name} (${count})` : name;
+            })
+            .join(', ');
+    };
+
+    const getMatchSummary = (match: Game) => {
+        const result = getResultBadge(match.score_for, match.score_against).text;
+        const date = new Date(match.match_date).toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+        });
+
+        return [
+            `Lions vs ${match.opposition_name}`,
+            `Date: ${date}`,
+            `Score: ${match.score_for} - ${match.score_against} (${result})`,
+            match.game_type_display ? `Competition: ${match.game_type_display}` : null,
+            match.location ? `Location: ${match.location}` : null,
+            `Scorers: ${formatPlayers(match.scorers, 'goal_count')}`,
+            `Assists: ${formatPlayers(match.assists, 'assist_count')}`,
+            `Saves: ${formatPlayers(match.saves, 'save_count')}`,
+        ].filter(Boolean).join('\n');
+    };
+
+    const openSummary = (match: Game) => {
+        setSelectedMatch(match);
+        setCopied(false);
+    };
+
+    const closeSummary = () => {
+        setSelectedMatch(null);
+        setCopied(false);
+    };
+
+    const copySummary = async () => {
+        if (!selectedMatch) return;
+
+        const summary = getMatchSummary(selectedMatch);
+        try {
+            await navigator.clipboard.writeText(summary);
+        } catch {
+            const textarea = document.createElement('textarea');
+            textarea.value = summary;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        }
+        setCopied(true);
     };
 
     return (
@@ -68,10 +136,15 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                             return (
                                 <tr key={match.id} className="hover:bg-gray-50">
                                     <td className="px-6 py-4">
-                                        <div className="text-sm font-medium text-gray-900">
+                                        <button
+                                            type="button"
+                                            onClick={() => openSummary(match)}
+                                            className="text-left text-sm font-medium text-salts-blue underline decoration-salts-blue/40 underline-offset-2 hover:text-blue-700 hover:decoration-blue-700 focus:outline-none focus:ring-2 focus:ring-salts-blue focus:ring-offset-2"
+                                            title="Open copyable match summary"
+                                        >
                                             Lions vs {match.opposition_name}
-                                        </div>
-                                        <div className="text-xs text-gray-500 mt-1">
+                                        </button>
+                                        <div className="text-sm font-semibold text-gray-500 mt-1">
                                             {new Date(match.match_date).toLocaleDateString('en-US', {
                                                 weekday: 'short',
                                                 month: 'short',
@@ -81,7 +154,7 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-center">
-                                        <div className="text-lg font-bold text-gray-900">
+                                        <div className="text-lg font-bold text-gray-900 whitespace-nowrap">
                                             {match.score_for} - {match.score_against}
                                         </div>
                                     </td>
@@ -153,6 +226,60 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                     </tbody>
                 </table>
             </div>
+            {selectedMatch && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+                    role="presentation"
+                    onMouseDown={(event) => {
+                        if (event.target === event.currentTarget) closeSummary();
+                    }}
+                >
+                    <div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="match-summary-title"
+                        className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl"
+                    >
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <h2 id="match-summary-title" className="text-lg font-semibold text-gray-900">Match summary</h2>
+                                <p className="mt-1 text-sm text-gray-500">Copy this summary to share the match stats.</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={closeSummary}
+                                className="text-sm font-medium text-gray-400 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-salts-blue"
+                                aria-label="Close match summary"
+                            >
+                                Close
+                            </button>
+                        </div>
+                        <textarea
+                            readOnly
+                            value={getMatchSummary(selectedMatch)}
+                            onFocus={(event) => event.currentTarget.select()}
+                            className="mt-4 min-h-48 w-full resize-y rounded border border-gray-300 p-3 text-sm text-gray-800 focus:border-salts-blue focus:outline-none focus:ring-2 focus:ring-salts-blue"
+                            aria-label="Copyable match summary"
+                        />
+                        <div className="mt-4 flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={closeSummary}
+                                className="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-salts-blue"
+                            >
+                                Close
+                            </button>
+                            <button
+                                type="button"
+                                onClick={copySummary}
+                                className="rounded bg-salts-blue px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-salts-blue focus:ring-offset-2"
+                            >
+                                {copied ? 'Copied' : 'Copy summary'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
