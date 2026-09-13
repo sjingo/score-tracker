@@ -123,17 +123,17 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
                 )}
 
                 {/* Filters */}
-                <div className="bg-white rounded-lg shadow p-4 mb-6">
+                <div className="bg-salts-blue rounded-lg shadow p-4 mb-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Game Type Filter */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-amber-200 mb-2">
                                 Filter by Type
                             </label>
                             <select
                                 value={selectedGameTypeId || ''}
                                 onChange={(e) => setSelectedGameTypeId(e.target.value || null)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-salts-blue"
+                                className="w-full px-3 py-2 border border-amber-200 rounded-lg bg-white text-gray-900 hover:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-200"
                             >
                                 <option value="">All Types</option>
                                 {gameTypes.map((type) => (
@@ -146,7 +146,7 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
 
                         {/* Opposition Filter */}
                         <div>
-                            <label htmlFor="opposition-search" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="opposition-search" className="block text-sm font-medium text-amber-200 mb-2">
                                 Search Opposition
                             </label>
                             <input
@@ -154,8 +154,8 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
                                 type="search"
                                 value={oppositionSearch}
                                 onChange={(e) => setOppositionSearch(e.target.value)}
-                                placeholder="Search team name"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-salts-blue"
+                                placeholder="Search by opposition name"
+                                className="w-full px-3 py-2 border border-amber-200 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 hover:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-200"
                             />
                         </div>
                     </div>
@@ -163,31 +163,31 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
 
                 {/* Stats Summary */}
                 <div className="grid grid-cols-2 gap-4 mb-2 md:grid-cols-4">
-                    <div className="bg-white rounded-lg shadow p-2 flex items-center gap-2">
-                        <span className="text-2xl font-bold text-gray-900">
+                    <div className="bg-salts-blue rounded-lg shadow p-2 flex items-center gap-2">
+                        <span className="text-2xl font-bold text-amber-200">
                             {games.filter((g) => g.status === 'completed').length}
                         </span>
-                        <span className="text-gray-600 text-sm">{" "}Matches </span>
+                        <span className="text-blue-100 text-sm">{" "}Matches </span>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-2 flex items-center gap-2">
-                        <span className="text-xl font-bold text-green-600">
+                    <div className="bg-salts-blue rounded-lg shadow p-2 flex items-center gap-2">
+                        <span className="text-xl font-bold text-amber-200">
                             {games.reduce((sum, g) => sum + g.score_for, 0)}
                         </span>
-                        <span className="text-gray-600 text-sm">{" "}Scored</span>
+                        <span className="text-blue-100 text-sm">{" "}Scored</span>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-2 flex items-center gap-2">
-                        <span className="text-2xl font-bold text-red-600">
+                    <div className="bg-salts-blue rounded-lg shadow p-2 flex items-center gap-2">
+                        <span className="text-2xl font-bold text-amber-200">
                             {games.reduce((sum, g) => sum + g.score_against, 0)}
                         </span>
-                        <span className="text-gray-600 text-sm">{" "}Conceded</span>
+                        <span className="text-blue-100 text-sm">{" "}Conceded</span>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-2 flex items-center gap-2">
+                    <div className="bg-salts-blue rounded-lg shadow p-2 flex items-center gap-2">
                         <span className="flex flex-wrap items-center gap-1">
                             <span className="md:hidden">{renderForm(2)}</span>
                             <span className="hidden md:inline lg:hidden">{renderForm(3)}</span>
                             <span className="hidden lg:inline">{renderForm(5)}</span>
                         </span>
-                        <span className="text-gray-600 text-sm">{" "}Form</span>
+                        <span className="text-blue-100 text-sm">{" "}Form</span>
                     </div>
                 </div>
             </div>
