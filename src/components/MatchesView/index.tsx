@@ -87,18 +87,38 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
         .filter((game) => game.status === 'completed')
         .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime());
 
+    const filteredCompletedGames: number = useMemo(() => {
+        const filtered = selectedGameTypeId
+            ? completedGames.filter((game) => game.game_type_id === selectedGameTypeId)
+            : completedGames;
+        return filtered.length ?? 0;
+    }, [selectedGameTypeId, completedGames]);
+
+    const filteredGoalsFor: number = useMemo(() => {
+        const filtered = selectedGameTypeId
+            ? completedGames.filter((game) => game.game_type_id === selectedGameTypeId)
+            : completedGames;
+        return filtered.reduce((sum, game) => sum + game.score_for, 0) ?? 0;
+    }, [selectedGameTypeId, completedGames]);
+
+    const filteredGoalsAgainst: number = useMemo(() => {
+        const filtered = selectedGameTypeId
+            ? completedGames.filter((game) => game.game_type_id === selectedGameTypeId)
+            : completedGames;
+        return filtered.reduce((sum, game) => sum + game.score_against, 0) ?? 0;
+    }, [selectedGameTypeId, completedGames]);
+
     const renderForm = (count: number) => completedGames
         .slice(0, count)
         .reverse()
         .map((game) => {
             const result = game.score_for > game.score_against
-                ? { text: 'W', color: 'bg-green-100 text-green-700' }
+                ? { text: 'W', color: 'bg-green-200' }
                 : game.score_for === game.score_against
-                    ? { text: 'D', color: 'bg-amber-100 text-amber-700' }
-                    : { text: 'L', color: 'bg-red-100 text-red-700' };
-
+                    ? { text: 'D', color: 'bg-amber-200' }
+                    : { text: 'L', color: 'bg-red-200' };
             return (
-                <span key={game.id} className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${result.color}`}>
+                <span key={game.id} className={`inline-block px-3 mx-1 py-1 rounded text-xs font-bold ${result.color}`}>
                     {result.text}
                 </span>
             );
@@ -130,10 +150,10 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
                 <button
                     onClick={handleSync}
                     disabled={isSyncing || loading}
-                    className="inline-flex items-center gap-2 rounded bg-salts-blue p-2 text-white hover:bg-blue-700 disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded p-2 text-white disabled:opacity-60"
                     title="Refresh matches from server"
                 >
-                    <SyncIcon className={`stroke-amber-200 size-5 ${isSyncing ? "animate-spin" : ""}`} />
+                    <SyncIcon className={` stroke-salts-blue size-10 ${isSyncing ? "animate-spin" : ""}`} />
                     {isSyncing}
                 </button>
             </div>
@@ -188,29 +208,26 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
                 <div className="grid grid-cols-2 gap-4 mb-2 md:grid-cols-4">
                     <div className="bg-salts-blue rounded-lg shadow p-2 flex items-center gap-2">
                         <span className="text-2xl font-bold text-amber-200">
-                            {games.filter((g) => g.status === 'completed').length}
+                            {filteredCompletedGames}
                         </span>
                         <span className="text-blue-100 text-sm">{" "}Matches </span>
                     </div>
                     <div className="bg-salts-blue rounded-lg shadow p-2 flex items-center gap-2">
                         <span className="text-xl font-bold text-amber-200">
-                            {games.reduce((sum, g) => sum + g.score_for, 0)}
+                            {filteredGoalsFor}
                         </span>
                         <span className="text-blue-100 text-sm">{" "}Scored</span>
                     </div>
                     <div className="bg-salts-blue rounded-lg shadow p-2 flex items-center gap-2">
                         <span className="text-2xl font-bold text-amber-200">
-                            {games.reduce((sum, g) => sum + g.score_against, 0)}
+                            {filteredGoalsAgainst}
                         </span>
                         <span className="text-blue-100 text-sm">{" "}Conceded</span>
                     </div>
-                    <div className="bg-salts-blue rounded-lg shadow p-2 flex items-center gap-2">
-                        <span className="flex flex-wrap items-center gap-1">
-                            <span className="md:hidden">{renderForm(2)}</span>
-                            <span className="hidden md:inline lg:hidden">{renderForm(3)}</span>
-                            <span className="hidden lg:inline">{renderForm(5)}</span>
-                        </span>
-                        <span className="text-blue-100 text-sm">{" "}Form</span>
+                    <div className="bg-salts-blue rounded-lg shadow p-2 flex justify-center gap-2">
+                        <div className="flex flex-wrap items-center gap-1">
+                            <div>{renderForm(4)}</div>
+                        </div>
                     </div>
                 </div>
             </div>
