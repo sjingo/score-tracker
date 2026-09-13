@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useXgStatsQuery } from "@/app/api/stats/useXgStatsQuery";
 import { useGamesQuery } from "@/app/api/games/hooks/useGamesQuery";
-import { Game } from "@/components/types";
 import SyncButton from "@/components/SyncButton";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 function formatDate(value: string) {
     return new Date(`${value.slice(0, 10)}T00:00:00Z`).toLocaleDateString();
@@ -48,7 +48,7 @@ function aggregateLeaderboard(
     );
 }
 
-export default function StatsView({ initialGames }: { initialGames?: Game[] }) {
+export default function StatsView() {
     const queryClient = useQueryClient();
     const [showOnlyGamesWithShots, setShowOnlyGamesWithShots] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
@@ -68,7 +68,7 @@ export default function StatsView({ initialGames }: { initialGames?: Game[] }) {
         isLoading: isLoadingPlayerStats,
         isError: isPlayerStatsError,
         error: playerStatsQueryError,
-    } = useGamesQuery(initialGames);
+    } = useGamesQuery();
 
     const handleSync = async () => {
         setIsSyncing(true);
@@ -132,7 +132,7 @@ export default function StatsView({ initialGames }: { initialGames?: Game[] }) {
     };
 
     if (isLoading || isLoadingPlayerStats) {
-        return <div className="max-w-6xl mx-auto px-4 py-8 text-gray-500">Loading stats...</div>;
+        return <LoadingSpinner label="Loading stats..." className="mx-auto max-w-6xl" />;
     }
 
     const hasFatalError = (isError && games.length === 0)

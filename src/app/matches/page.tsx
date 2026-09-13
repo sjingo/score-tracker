@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import DashboardShell from "@/components/DashboardShell";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import MatchesView from "@/components/MatchesView";
 import { requireDashboardPage } from "@/lib/authorization";
 
@@ -8,11 +9,7 @@ export default async function MatchesRoute() {
 
     return (
         <DashboardShell activeTab="matches" role={role}>
-            <Suspense fallback={
-                <div className="max-w-6xl mx-auto px-4 py-8">
-                    <div className="text-center text-gray-500">Loading matches...</div>
-                </div>
-            }>
+            <Suspense fallback={<LoadingSpinner label="Loading matches..." className="mx-auto max-w-6xl" />}>
                 <MatchesView />
             </Suspense>
         </DashboardShell>

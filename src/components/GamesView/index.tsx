@@ -1,7 +1,8 @@
 "use client";
 import { CloseIcon } from "@/icons/close";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, type SetStateAction } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Game, GameType, Team, OPPOSITION_GOAL } from '../types'
 import { useGameGoalMutation } from "@/app/api/games/hooks/useGameGoalMutation";
 import { useGameAssistMutation } from "@/app/api/games/hooks/useGameAssistMutation";
@@ -21,17 +22,27 @@ import GameDatePicker from "./GameDatePicker";
 import GameTypeSelect from "./GameTypeSelect";
 import LocationSelect from "./LocationSelect";
 import ShotsPanel from "./ShotsPanel";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 
 interface GamesViewProps {
-    initialGames: Game[];
     onInProgressGameChange?: (hasInProgressGame: boolean) => void;
 }
 
-export default function GamesView({ initialGames, onInProgressGameChange }: GamesViewProps) {
+export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
+    const queryClient = useQueryClient();
+    const { data: queryGames = [], isLoading: gamesLoading } = useGamesQuery();
     // Local state for UI interactions and optimistic updates
-    const [games, setGames] = useState<Game[]>(initialGames);
+    const [games, setLocalGames] = useState<Game[]>(queryGames);
     const [showCreatePanel, setShowCreatePanel] = useState(false);
+
+    const setGames = (update: SetStateAction<Game[]>) => {
+        setLocalGames((currentGames) => {
+            const nextGames = typeof update === "function" ? update(currentGames) : update;
+            queryClient.setQueryData<Game[]>(["games"], nextGames);
+            return nextGames;
+        });
+    };
 
     // Detect in-progress games early so we can use it for lazy-loading triggers
     const hasInProgressGame = useMemo(
@@ -40,7 +51,6 @@ export default function GamesView({ initialGames, onInProgressGameChange }: Game
     );
 
     // React Query hooks - game types and teams fetch when create panel opens OR game is in progress
-    const { isLoading: gamesLoading } = useGamesQuery(initialGames);
     const { data: playersData = [], isLoading: playersLoading } = usePlayersQuery();
     const { data: gameTypesData = [], isLoading: typesLoading } = useGameTypesQuery(showCreatePanel || hasInProgressGame);
     const { data: teamsData = [], isLoading: teamsLoading } = useTeamsQuery(showCreatePanel || hasInProgressGame);
@@ -92,6 +102,10 @@ export default function GamesView({ initialGames, onInProgressGameChange }: Game
     useEffect(() => {
         onInProgressGameChange?.(hasInProgressGame);
     }, [hasInProgressGame, onInProgressGameChange]);
+
+    useEffect(() => {
+        setLocalGames(queryGames);
+    }, [queryGames]);
 
     const handleCreateGame = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -531,10 +545,7 @@ export default function GamesView({ initialGames, onInProgressGameChange }: Game
     const completedGames = games.filter((g) => g.status === "completed");
     const activePlayers = useMemo(() => [{ id: OPPOSITION_GOAL, jersey_number: '0', name: 'Opposition Goal', is_active: true }, ...playersData.filter((p) => p.is_active)], [playersData]);
 
-    if (loading)
-        return (
-            <div className="p-2 text-center text-lg font-semibold">Loading...</div>
-        );
+    if (loading) return <LoadingSpinner label="Loading games..." />;
 
     return (
         <div className="max-w-6xl mx-auto p-1">
