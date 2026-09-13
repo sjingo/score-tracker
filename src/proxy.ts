@@ -7,7 +7,7 @@
  * 3. Redirects to login if session is invalid
  *
  * Routes are categorized as:
- * - PROTECTED: Require valid session (/, /debug, /api/*)
+ * - PROTECTED: Require valid session (dashboard pages, /account, /debug, /api/*)
  * - PUBLIC: Accessible without auth (/login)
  * - IGNORED: Pass through without checking (/_next, /static, etc)
  */
@@ -20,7 +20,16 @@ import { NextRequest, NextResponse } from "next/server";
  * Routes that require authentication
  * Unauthenticated users will be redirected to /login
  */
-const PROTECTED_ROUTES = ["/", "/account", "/debug", "/api/"];
+const PROTECTED_ROUTES = [
+  "/",
+  "/account",
+  "/debug",
+  "/games",
+  "/matches",
+  "/stats",
+  "/players",
+  "/api/",
+];
 
 /**
  * Public routes that don't need authentication
@@ -49,7 +58,9 @@ export async function proxy(request: NextRequest) {
 
   // Check if route requires authentication
   const isProtected = PROTECTED_ROUTES.some((route) =>
-    pathname.startsWith(route),
+    route === "/"
+      ? pathname === "/"
+      : pathname === route || pathname.startsWith(`${route}/`),
   );
 
   if (!isProtected) {
