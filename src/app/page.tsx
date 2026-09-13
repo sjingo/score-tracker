@@ -7,7 +7,7 @@ import AdminDashboard from "@/components/AdminDashboard";
 export default async function Home() {
   const session = await auth.api.getSession({ headers: await headers() });
 
-  if (!session?.user || getSessionRole(session) !== "admin") {
+  if (!session?.user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-12">
         <div className="mx-auto max-w-xl rounded-lg bg-white p-8 text-center shadow-lg">
@@ -22,5 +22,5 @@ export default async function Home() {
 
   const initialGames = await getGames();
 
-  return <AdminDashboard initialGames={initialGames} />;
+  return <AdminDashboard initialGames={initialGames} role={getSessionRole(session)} />;
 }

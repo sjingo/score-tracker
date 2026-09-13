@@ -7,9 +7,8 @@ export function getSessionRole(session: Session): AuthRole {
   return (session.user as typeof session.user & { role: AuthRole }).role;
 }
 
-export async function requireRole(
+export async function requireAuthenticated(
   request: Request,
-  role: AuthRole,
 ): Promise<Session | NextResponse> {
   const session = await auth.api.getSession({ headers: request.headers });
 
@@ -19,6 +18,16 @@ export async function requireRole(
       { status: 401 },
     );
   }
+
+  return session;
+}
+
+export async function requireRole(
+  request: Request,
+  role: AuthRole,
+): Promise<Session | NextResponse> {
+  const session = await requireAuthenticated(request);
+  if (session instanceof Response) return session;
 
   if (getSessionRole(session) !== role) {
     return NextResponse.json(

@@ -15,24 +15,37 @@ interface MatchesViewProps {
 export default function MatchesView({ isActive = true }: MatchesViewProps) {
     const queryClient = useQueryClient();
     // React Query hooks - data fetched with 10 minute stale time
-    const { data: games = [], isLoading: gamesLoading } = useGamesQuery(undefined, isActive);
-    const { data: gameTypes = [], isLoading: typesLoading } = useGameTypesQuery(isActive);
+    const {
+        data: games = [],
+        isLoading: gamesLoading,
+        isError: gamesError,
+        error: gamesQueryError,
+    } = useGamesQuery(undefined, isActive);
+    const {
+        data: gameTypes = [],
+        isLoading: typesLoading,
+        isError: gameTypesError,
+        error: gameTypesQueryError,
+    } = useGameTypesQuery(isActive);
 
     // Local state for UI interactions
     const [selectedGameTypeId, setSelectedGameTypeId] = useState<string | null>(null);
     const [oppositionSearch, setOppositionSearch] = useState('');
-    const [error] = useState<string | null>(null);
     const [isSyncing, setIsSyncing] = useState(false);
 
     const loading = gamesLoading || typesLoading;
+    const error = gamesQueryError?.message || gameTypesQueryError?.message;
 
     const handleSync = async () => {
         setIsSyncing(true);
-        await Promise.all([
-            queryClient.invalidateQueries({ queryKey: ["games"] }),
-            queryClient.invalidateQueries({ queryKey: ["gameTypes"] }),
-        ]);
-        setIsSyncing(false);
+        try {
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ["games"] }),
+                queryClient.invalidateQueries({ queryKey: ["gameTypes"] }),
+            ]);
+        } finally {
+            setIsSyncing(false);
+        }
     };
 
     const filteredGames = useMemo(() => {
@@ -95,6 +108,16 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
         return (
             <div className="max-w-6xl mx-auto px-4 py-8">
                 <div className="text-center text-gray-500">Loading matches...</div>
+            </div>
+        );
+    }
+
+    if (gamesError || gameTypesError) {
+        return (
+            <div className="max-w-6xl mx-auto px-4 py-8">
+                <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center text-red-700">
+                    {error || "Failed to load matches."}
+                </div>
             </div>
         );
     }

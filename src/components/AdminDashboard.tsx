@@ -7,13 +7,15 @@ import MatchesView from "@/components/MatchesView";
 import StatsView from "@/components/StatsView";
 import { Game } from "@/components/types";
 
-export default function AdminDashboard({ initialGames }: { initialGames: Game[] }) {
-    const [activeTab, setActiveTab] = useState<"games" | "players" | "matches" | "stats">("games");
+type DashboardTab = "games" | "players" | "matches" | "stats";
+
+export default function AdminDashboard({ initialGames, role }: { initialGames: Game[]; role: "admin" | "user" }) {
+    const [activeTab, setActiveTab] = useState<DashboardTab>(role === "admin" ? "games" : "matches");
     const [hasInProgressGame, setHasInProgressGame] = useState(false);
-    const [pendingTab, setPendingTab] = useState<"games" | "players" | "matches" | "stats" | null>(null);
+    const [pendingTab, setPendingTab] = useState<DashboardTab | null>(null);
     const [showConfirm, setShowConfirm] = useState(false);
 
-    const handleTabChange = useCallback((tab: "games" | "players" | "matches" | "stats") => {
+    const handleTabChange = useCallback((tab: DashboardTab) => {
         // If on Games tab with in-progress game, show confirmation
         if (activeTab === "games" && hasInProgressGame && tab !== "games") {
             setPendingTab(tab);
@@ -22,6 +24,18 @@ export default function AdminDashboard({ initialGames }: { initialGames: Game[] 
         }
         setActiveTab(tab);
     }, [activeTab, hasInProgressGame]);
+
+    const tabs: Array<[DashboardTab, string]> = role === "admin"
+        ? [
+            ["games", "⚽ Games"],
+            ["matches", "📊 Matches"],
+            ["stats", "📈 Stats"],
+            ["players", "👥 Squad"],
+        ]
+        : [
+            ["matches", "📊 Matches"],
+            ["stats", "📈 Stats"],
+        ];
 
     const handleConfirmNavigation = () => {
         if (pendingTab) {
@@ -54,12 +68,7 @@ export default function AdminDashboard({ initialGames }: { initialGames: Game[] 
             <div className="bg-white border-b">
                 <div className="max-w-6xl mx-auto px-4">
                     <div className="flex min-w-0 gap-4 overflow-x-auto">
-                        {([
-                            ["games", "⚽ Games"],
-                            ["matches", "📊 Matches"],
-                            ["stats", "📈 Stats"],
-                            ["players", "👥 Squad"],
-                        ] as const).map(([tab, label]) => (
+                        {tabs.map(([tab, label]) => (
                             <button
                                 key={tab}
                                 onClick={() => handleTabChange(tab)}

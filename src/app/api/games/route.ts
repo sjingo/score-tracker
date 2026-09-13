@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getGames } from "@/lib/games";
 import { randomUUID } from "crypto";
-import { requireRole } from "@/lib/authorization";
+import { requireAuthenticated, requireRole } from "@/lib/authorization";
 
 // ============================================================================
 // GET all games for Lions team (with game_types and scorers)
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   console.log("[GET /api/games] Fetching all games for Lions team");
 
   try {
-    const authorization = await requireRole(request, "admin");
+    const authorization = await requireAuthenticated(request);
     if (authorization instanceof Response) return authorization;
 
     const games = await getGames();
