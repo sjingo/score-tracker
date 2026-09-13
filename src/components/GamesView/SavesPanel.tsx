@@ -90,10 +90,6 @@ export default function SavesPanel({
                         selectedPlayer={selectedPlayer}
                         onChange={onSelectPlayer}
                     />
-                    <div className="flex items-center gap-2 basis-1/2">
-                        <PlusIcon className="w-10 h-10 text-blue-600" onClick={() => onRecordSave(game.id, 1)} />
-                        <MinusIcon className="w-10 h-10 text-red-600" onClick={() => onRecordSave(game.id, -1)} />
-                    </div>
                 </div>
             </div>
         </>

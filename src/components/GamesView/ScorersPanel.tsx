@@ -137,16 +137,6 @@ export default function ScorersPanel({
                             </option>
                         ))}
                     </select>
-                    <div className="flex items-center gap-2 basis-1/2">
-                        <PlusIcon
-                            className="w-10 h-10 text-blue-600"
-                            onClick={() => onRecordGoal(game.id, 1)}
-                        />
-                        <MinusIcon
-                            className="w-10 h-10 text-red-600"
-                            onClick={() => onRecordGoal(game.id, -1)}
-                        />
-                    </div>
                 </div>
             </div>
         </>
