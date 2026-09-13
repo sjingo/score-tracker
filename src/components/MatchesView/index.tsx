@@ -10,6 +10,7 @@ import MatchResults from './MatchResults';
 import MatchForm from '@/components/MatchesView/MatchForm';
 import StatsSummary from './StatsSummary';
 import { useMatchFilters } from '@/components/MatchesView/useMatchFilters';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 interface MatchesViewProps {
     isActive?: boolean;
@@ -97,11 +98,7 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
     const filteredGoalsAgainst = filteredCompletedGames.reduce((sum, game) => sum + game.score_against, 0);
 
     if (loading) {
-        return (
-            <div className="max-w-6xl mx-auto px-4 py-8">
-                <div className="text-center text-gray-500">Loading matches...</div>
-            </div>
-        );
+        return <LoadingSpinner label="Loading matches..." className="mx-auto max-w-6xl" />;
     }
 
     if (gamesError || gameTypesError) {

@@ -15,12 +15,38 @@ export default function LoginPage() {
         e.preventDefault();
         setIsLoading(true);
         setError("");
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(() => controller.abort(), 15000);
+
         try {
-            await signIn.email({ email, password });
+            const result = await signIn.email({
+                email: email.trim().toLowerCase(),
+                password,
+                fetchOptions: {
+                    signal: controller.signal,
+                },
+            });
+
+            if (result.error) {
+                if (result.error.status === 401) {
+                    setError("Invalid email or password. Please try again.");
+                } else {
+                    setError(result.error.message || "Unable to sign in. Please try again.");
+                }
+                return;
+            }
+
             router.push("/");
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to sign in. Please check your credentials.");
+            if (err instanceof DOMException && err.name === "AbortError") {
+                setError("Sign-in timed out. Please check your connection and try again.");
+            } else if (err instanceof TypeError) {
+                setError("Unable to reach the sign-in service. Please check your connection and try again.");
+            } else {
+                setError(err instanceof Error ? err.message : "Unable to sign in. Please try again.");
+            }
         } finally {
+            window.clearTimeout(timeoutId);
             setIsLoading(false);
         }
     }
@@ -34,7 +60,7 @@ export default function LoginPage() {
                 <p className="text-center text-gray-600 mb-8">Sign in to your account</p>
 
                 {error && (
-                    <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                    <div role="alert" className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                         {error}
                     </div>
                 )}
@@ -51,6 +77,8 @@ export default function LoginPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="you@example.com"
+                            autoComplete="email"
+                            disabled={isLoading}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-salts-blue"
                             required
                         />
@@ -66,6 +94,8 @@ export default function LoginPage() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="Your password"
+                            autoComplete="current-password"
+                            disabled={isLoading}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-salts-blue"
                             required
                         />
@@ -74,10 +104,16 @@ export default function LoginPage() {
                     <button
                         type="submit"
                         disabled={isLoading}
+                        aria-busy={isLoading}
                         className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
                     >
-                        {isLoading ? "Signing in..." : "Sign In"}
+                        {isLoading ? "Checking your details..." : "Sign In"}
                     </button>
+                    {isLoading && (
+                        <p className="text-center text-sm text-gray-500" role="status">
+                            Connecting securely. This can take a few seconds.
+                        </p>
+                    )}
                 </form>
             </div>
         </div>

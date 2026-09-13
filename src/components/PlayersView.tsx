@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { usePlayersQuery } from "@/app/api/players/hooks/usePlayersQuery";
 import { useCreatePlayerMutation } from "@/app/api/players/hooks/useCreatePlayerMutation";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 export default function PlayersView() {
     const [newPlayer, setNewPlayer] = useState({
@@ -28,7 +29,7 @@ export default function PlayersView() {
         });
     };
 
-    if (isLoading) return <div className="p-4">Loading...</div>;
+    if (isLoading) return <LoadingSpinner label="Loading players..." className="mx-auto max-w-4xl" />;
 
     return (
         <div className="max-w-4xl mx-auto p-4">
