@@ -51,11 +51,6 @@ export default function StatsView() {
     const queryClient = useQueryClient();
     const [showOnlyGamesWithShots, setShowOnlyGamesWithShots] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
-    const [expandedLeaderboards, setExpandedLeaderboards] = useState<Record<string, boolean>>({
-        scorers: true,
-        assists: true,
-        saves: true,
-    });
     const {
         data: games = [],
         isLoading,
@@ -123,13 +118,6 @@ export default function StatsView() {
         playerCount: leaderboard.entries.length,
     }));
 
-    const toggleLeaderboard = (key: string) => {
-        setExpandedLeaderboards((current) => ({
-            ...current,
-            [key]: !current[key],
-        }));
-    };
-
     if (isLoading || isLoadingPlayerStats) {
         return <LoadingSpinner label="Loading stats..." className="mx-auto max-w-6xl" />;
     }
@@ -165,30 +153,22 @@ export default function StatsView() {
             />
 
             <Surface variant="panel" className="mb-4 p-4 sm:mb-6 sm:p-6">
+                <h2 className="text-xl font-bold text-white sm:text-2xl">Average xG per game</h2>
                 <div className="flex flex-wrap items-end justify-between gap-4 sm:gap-6">
-                    <div>
-                        <p className="text-sm font-semibold uppercase tracking-wide text-amber-200">All recorded shot games</p>
-                        <p className="mt-1 text-sm text-blue-100">Games without shots are excluded from this total.</p>
-                    </div>
                     <div className="text-right">
-                        <p className="text-sm text-blue-100">Average xG per game</p>
-                        <p className="text-4xl font-bold tracking-tight sm:text-5xl">{averageXg.toFixed(2)}</p>
+                        <p className="p-2 text-4xl font-bold tracking-tight text-amber-200 sm:text-5xl">{averageXg.toFixed(2)}</p>
                     </div>
                 </div>
-                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-t border-blue-400 pt-3 text-sm text-blue-100 sm:mt-5 sm:gap-x-8 sm:pt-4">
+                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-t border-blue-400 pt-3 text-sm text-white sm:mt-5 sm:gap-x-8 sm:pt-4">
                     <span>{gamesWithShots.length} games</span>
                     <span>{totalShots} shots</span>
                     <span>{averageShots.toFixed(1)} shots per game</span>
                     <span>{totalXg.toFixed(2)} total xG</span>
-                    <span>{actualGoals} actual goals</span>
-                    <span>Goals minus xG: <strong className="text-white">{(actualGoals - totalXg).toFixed(2)}</strong></span>
                 </div>
             </Surface>
 
             <LeaderboardStats
                 leaderboards={leaderboardStats}
-                expandedLeaderboards={expandedLeaderboards}
-                onToggle={toggleLeaderboard}
             />
 
             <label className="mb-6 flex items-center gap-3 text-sm text-gray-700">

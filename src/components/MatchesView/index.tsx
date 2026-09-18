@@ -140,7 +140,7 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
                     <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
                         {/* Game Type Filter */}
                         <div>
-                            <label className="mb-2 block text-sm font-medium text-amber-200">
+                            <label className="mb-2 block text-sm font-medium text-white">
                                 Filter by Type
                             </label>
                             <select
@@ -159,7 +159,7 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
 
                         {/* Opposition Filter */}
                         <div>
-                            <label htmlFor="opposition-search" className="block text-sm font-medium text-amber-200 mb-2">
+                            <label htmlFor="opposition-search" className="mb-2 block text-sm font-medium text-white">
                                 Search Opposition
                             </label>
                             <input

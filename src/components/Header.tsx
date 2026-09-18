@@ -27,7 +27,7 @@ export const Header = () => {
                     >
                         <HomeIcon className="size-5 stroke-amber-200 dark:stroke-white-500 sm:size-6" />
                     </Link>
-                    <h1 className="min-w-0 flex-1 truncate text-base font-bold text-amber-200 sm:text-lg">
+                    <h1 className="min-w-0 flex-1 truncate text-base font-bold text-white sm:text-lg">
                         Lions Score Tracker</h1>
                 </div>
                 {/* User Info */}
@@ -43,7 +43,7 @@ export const Header = () => {
                                 >
                                     <UserIcon className="size-5 stroke-amber-200 dark:stroke-white-500 sm:size-6" />
                                 </Link>
-                                <span className="truncate text-xs text-amber-200 sm:text-sm">
+                                <span className="truncate text-xs text-white sm:text-sm">
                                     {session && session.user.email}
                                 </span>
 

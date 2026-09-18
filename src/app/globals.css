@@ -19,6 +19,47 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+@keyframes leaderboard-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes leaderboard-drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.leaderboard-drawer-overlay {
+  animation: leaderboard-overlay-in 180ms ease-out both;
+}
+
+.leaderboard-drawer {
+  animation: leaderboard-drawer-in 240ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leaderboard-drawer-overlay,
+  .leaderboard-drawer {
+    animation: none;
+  }
+}
+
+@layer base {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    background-color: #ffffff;
+  }
+}
+
 .game-meta-row {
   display: flex;
   flex-wrap: wrap;
@@ -28,28 +69,16 @@ body {
 
 .game-type-select {
   appearance: auto;
-  border: 0;
+  border: 1px solid #d1d5db;
   border-radius: 0.25rem;
-  color: #ffffff;
+  color: #374151;
   cursor: pointer;
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.25rem 0.5rem;
-  background-color: #3b82f6;
+  background-color: #ffffff;
 }
 
 .game-type-select:disabled {
   cursor: wait;
-}
-
-.game-type-select[data-game-type="cup"] {
-  background-color: #ef4444;
-}
-
-.game-type-select[data-game-type="friendly"] {
-  background-color: #10b981;
-}
-
-.game-type-select[data-game-type="tournament"] {
-  background-color: #f59e0b;
 }

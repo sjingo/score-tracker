@@ -49,6 +49,16 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
             .join(', ');
     };
 
+    const formatTablePlayers = (players: Array<{ player_name?: string; anonymised_id?: string; goal_count?: number; assist_count?: number; save_count?: number }>, countKey: 'goal_count' | 'assist_count' | 'save_count') => {
+        return players
+            .map((player) => {
+                const name = (player.player_name || player.anonymised_id || 'Unknown player').trim().split(/\s+/)[0];
+                const count = player[countKey];
+                return count && count > 1 ? `${name} (${count})` : name;
+            })
+            .join(', ');
+    };
+
     const getMatchSummary = (match: Game) => {
         const result = getResultBadge(match.score_for, match.score_against).text;
         const date = new Date(match.match_date).toLocaleDateString('en-US', {
@@ -119,9 +129,9 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                             const scorers = truncateScorers(match.scorers || []);
                             const assists = truncateScorers(match.assists || []);
                             const saves = truncateScorers(match.saves || []);
-                            const hasMoreScorers = false;
-                            const hasMoreAssists = false;
-                            const hasMoreSaves = false;
+                            const scorerNames = formatTablePlayers(scorers, 'goal_count');
+                            const assistNames = formatTablePlayers(assists, 'assist_count');
+                            const saveNames = formatTablePlayers(saves, 'save_count');
 
                             return (
                                 <tr key={match.id} className="hover:bg-gray-50">
@@ -154,61 +164,13 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                                         </span>
                                     </td>
                                     <td className="px-3 py-3 sm:px-6 sm:py-4">
-                                        <div className="text-xs text-gray-700 leading-relaxed">
-                                            {scorers.length > 0 ? (
-                                                <div>
-                                                    {scorers.map((scorer, idx) => (
-                                                        <div key={idx}>
-                                                            {scorer.player_name || scorer.anonymised_id}
-                                                            {scorer.goal_count !== undefined && scorer.goal_count > 1 && ` (${scorer.goal_count})`}
-                                                        </div>
-                                                    ))}
-                                                    {hasMoreScorers && (
-                                                        <div className="text-gray-500 italic">+{(match.scorers?.length || 0) - 4} more</div>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <span className="text-gray-400">-</span>
-                                            )}
-                                        </div>
+                                        <div className="text-xs leading-relaxed text-gray-700">{scorerNames || <span className="text-gray-400">-</span>}</div>
                                     </td>
                                     <td className="px-3 py-3 sm:px-6 sm:py-4">
-                                        <div className="text-xs text-gray-700 leading-relaxed">
-                                            {assists.length > 0 ? (
-                                                <div>
-                                                    {assists.map((assist, idx) => (
-                                                        <div key={idx}>
-                                                            {assist.player_name || assist.anonymised_id}
-                                                            {assist.assist_count !== undefined && assist.assist_count > 1 && ` (${assist.assist_count})`}
-                                                        </div>
-                                                    ))}
-                                                    {hasMoreAssists && (
-                                                        <div className="text-gray-500 italic">+{(match.assists?.length || 0) - 4} more</div>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <span className="text-gray-400">-</span>
-                                            )}
-                                        </div>
+                                        <div className="text-xs leading-relaxed text-gray-700">{assistNames || <span className="text-gray-400">-</span>}</div>
                                     </td>
                                     <td className="px-3 py-3 sm:px-6 sm:py-4">
-                                        <div className="text-xs text-gray-700 leading-relaxed">
-                                            {saves.length > 0 ? (
-                                                <div>
-                                                    {saves.map((save, idx) => (
-                                                        <div key={idx}>
-                                                            {save.player_name || save.anonymised_id}
-                                                            {save.save_count !== undefined && save.save_count > 1 && ` (${save.save_count})`}
-                                                        </div>
-                                                    ))}
-                                                    {hasMoreSaves && (
-                                                        <div className="text-gray-500 italic">+{(match.saves?.length || 0) - 4} more</div>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <span className="text-gray-400">-</span>
-                                            )}
-                                        </div>
+                                        <div className="text-xs leading-relaxed text-gray-700">{saveNames || <span className="text-gray-400">-</span>}</div>
                                     </td>
                                 </tr>
                             );

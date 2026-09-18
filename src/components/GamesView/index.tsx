@@ -570,7 +570,7 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
             {/* Create New Game Toggle Button */}
             <button
                 onClick={() => setShowCreatePanel(!showCreatePanel)}
-                className="mb-4 inline-flex items-center rounded bg-salts-blue px-4 py-1.5 font-semibold text-amber-200 hover:bg-blue-700 sm:mb-6 sm:px-6 sm:py-2"
+                className="mb-4 inline-flex items-center rounded bg-salts-blue px-4 py-1.5 font-semibold text-white hover:bg-blue-700 sm:mb-6 sm:px-6 sm:py-2"
             >
                 {showCreatePanel ? (<><CloseIcon className="size-6 stroke-3" /> </>) : "New Game"}
             </button>
@@ -599,7 +599,7 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
                                     }}
                                     required
                                     disabled={teamsLoading}
-                                    className={`w-full rounded border px-3 py-2 text-sm sm:p-3 ${teamsLoading ? "cursor-not-allowed bg-gray-200 text-gray-500" : "bg-gray-50"
+                                    className={`w-full rounded border bg-white px-3 py-2 text-sm sm:p-3 ${teamsLoading ? "cursor-not-allowed text-gray-500" : ""
                                         }`}
                                 >
                                     <option value="">{teamsLoading ? "Loading teams..." : "Select Opposition Team (required)"}</option>
@@ -637,7 +637,7 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
                                 }
                                 required
                                 disabled={typesLoading}
-                                className={`rounded border px-3 py-2 text-sm sm:p-3 ${typesLoading ? "cursor-not-allowed bg-gray-200 text-gray-500" : "bg-gray-50"
+                                className={`rounded border bg-white px-3 py-2 text-sm sm:p-3 ${typesLoading ? "cursor-not-allowed text-gray-500" : ""
                                     }`}
                             >
                                 <option value="">{typesLoading ? "Loading game types..." : "Select Game Type (required)"}</option>
@@ -652,14 +652,14 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
                                 placeholder="Venue (optional)"
                                 value={newGame.venue}
                                 onChange={(e) => setNewGame({ ...newGame, venue: e.target.value })}
-                                className="rounded border p-2 text-sm sm:p-3"
+                                className="rounded border bg-white p-2 text-sm sm:p-3"
                             />
                             <select
                                 value={newGame.location}
                                 onChange={(e) =>
                                     setNewGame({ ...newGame, location: e.target.value })
                                 }
-                                className="rounded border p-2 text-sm sm:p-3"
+                                className="rounded border bg-white p-2 text-sm sm:p-3"
                             >
                                 <option value="">Select Location (optional)</option>
                                 <option value="home">Home</option>
@@ -670,7 +670,7 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
                             placeholder="Notes (optional)"
                             value={newGame.notes}
                             onChange={(e) => setNewGame({ ...newGame, notes: e.target.value })}
-                            className="w-full rounded border p-2 text-sm sm:p-3"
+                            className="w-full rounded border bg-white p-2 text-sm sm:p-3"
                             rows={2}
                         />
                         <button
