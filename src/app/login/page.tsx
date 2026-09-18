@@ -54,7 +54,7 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-3 py-6 sm:px-4 sm:py-8">
+        <div className="flex min-h-[calc(100dvh-80px)] items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-3 py-6 sm:px-4 sm:py-8">
             <Surface className="w-full max-w-md p-5 sm:p-6">
                 <h1 className="mb-2 text-center text-2xl font-bold text-gray-900 sm:text-3xl">
                     Login

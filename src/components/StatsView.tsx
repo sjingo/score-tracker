@@ -162,8 +162,8 @@ export default function StatsView() {
                 <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-t border-blue-400 pt-3 text-sm text-white sm:mt-5 sm:gap-x-8 sm:pt-4">
                     <span>{gamesWithShots.length} games</span>
                     <span>{totalShots} shots</span>
-                    <span>{averageShots.toFixed(1)} shots per game</span>
-                    <span>{totalXg.toFixed(2)} total xG</span>
+                    <span>{averageShots.toFixed(1)} shots p/g</span>
+                    <span>{totalXg.toFixed(2)} xG</span>
                 </div>
             </Surface>
 

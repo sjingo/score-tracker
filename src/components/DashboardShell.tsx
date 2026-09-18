@@ -65,7 +65,7 @@ export default function DashboardShell({
     }, [activeTab, hasInProgressGame]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="flex min-h-[calc(100dvh-80px)] flex-1 flex-col bg-gradient-to-br from-blue-50 to-indigo-100">
             <nav className="border-b bg-white" aria-label="Dashboard navigation">
                 <PageContainer flush>
                     <div className="flex min-w-0 gap-4 overflow-x-auto">
@@ -87,7 +87,7 @@ export default function DashboardShell({
                 </PageContainer>
             </nav>
 
-            <div>{children}</div>
+            <div className="flex-1">{children}</div>
 
             {showConfirm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
