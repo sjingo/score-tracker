@@ -48,10 +48,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const matchReportParams = new URLSearchParams({
+      opposition: String(game.opposition_name),
+      matchId: gameId,
+    });
+
     const result = await sendPushNotificationToAll({
       title: `${Number(game.score_for)} - ${Number(game.score_against)} | Lions vs ${game.opposition_name}`,
-      body: "Match and player stats have been updated.",
-      url: "/matches",
+      body: "Tap to open and copy the match report.",
+      url: `/matches?${matchReportParams.toString()}`,
     });
 
     return NextResponse.json({ success: true, ...result });

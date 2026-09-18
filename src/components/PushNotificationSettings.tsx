@@ -187,36 +187,11 @@ export default function PushNotificationSettings() {
         }
     }
 
-    async function sendTestNotification() {
-        setIsBusy(true);
-        setError("");
-        setMessage("");
-
-        try {
-            const response = await fetch("/api/push/test", { method: "POST" });
-            const data = (await response.json()) as { error?: string };
-
-            if (!response.ok) {
-                throw new Error(data.error || "Unable to send test notification.");
-            }
-
-            setMessage("Test notification sent.");
-        } catch (testError) {
-            setError(
-                testError instanceof Error
-                    ? testError.message
-                    : "Unable to send test notification.",
-            );
-        } finally {
-            setIsBusy(false);
-        }
-    }
-
     return (
         <section className="mt-8 border-t border-salts-blue pt-6">
             <SectionHeading
                 title="Push notifications"
-                description="Receive a test notification on this device."
+                description="Receive notifications on this device."
             />
 
             {isSupported === null && (
@@ -257,14 +232,6 @@ export default function PushNotificationSettings() {
 
             {isSupported && settings?.configured && subscription && (
                 <div className="mt-4 flex flex-wrap gap-3">
-                    <button
-                        type="button"
-                        onClick={() => void sendTestNotification()}
-                        disabled={isBusy}
-                        className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:bg-gray-400"
-                    >
-                        {isBusy ? "Sending..." : "Send test notification"}
-                    </button>
                     <button
                         type="button"
                         onClick={() => void unsubscribeFromPush()}

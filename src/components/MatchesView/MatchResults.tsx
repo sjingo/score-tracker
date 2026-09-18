@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Game, GameType } from '../types';
 import TableShell from './TableShell';
 
@@ -12,14 +13,22 @@ interface MatchResultsProps {
 export default function MatchResults({ matches, gameType }: MatchResultsProps) {
     const [selectedMatch, setSelectedMatch] = useState<Game | null>(null);
     const [copied, setCopied] = useState(false);
+    const [dismissedReportMatchId, setDismissedReportMatchId] = useState<string | null>(null);
+    const pathname = usePathname();
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const reportMatchId = searchParams.get('matchId');
 
     const completed = [...matches]
         .filter((m) => m.status === 'completed')
         .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime());
 
-    if (completed.length === 0) {
-        return null;
-    }
+    const reportMatch = reportMatchId
+        ? completed.find((match) => match.id === reportMatchId) ?? null
+        : null;
+    const activeMatch = selectedMatch ?? (
+        reportMatchId !== dismissedReportMatchId ? reportMatch : null
+    );
 
     const getResultBadge = (scoreFor: number, scoreAgainst: number) => {
         if (scoreFor > scoreAgainst) {
@@ -80,6 +89,8 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
         ].filter(Boolean).join('\n');
     };
 
+    const summary = activeMatch ? getMatchSummary(activeMatch) : null;
+
     const openSummary = (match: Game) => {
         setSelectedMatch(match);
         setCopied(false);
@@ -88,12 +99,20 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
     const closeSummary = () => {
         setSelectedMatch(null);
         setCopied(false);
+
+        if (reportMatchId) {
+            setDismissedReportMatchId(reportMatchId);
+            const nextSearchParams = new URLSearchParams(searchParams.toString());
+            nextSearchParams.delete('matchId');
+            const query = nextSearchParams.toString();
+            const currentPathname = pathname ?? '/matches';
+            router.replace(query ? `${currentPathname}?${query}` : currentPathname, { scroll: false });
+        }
     };
 
     const copySummary = async () => {
-        if (!selectedMatch) return;
+        if (!summary) return;
 
-        const summary = getMatchSummary(selectedMatch);
         try {
             await navigator.clipboard.writeText(summary);
         } catch {
@@ -108,6 +127,28 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
         }
         setCopied(true);
     };
+
+    useEffect(() => {
+        if (!reportMatchId || reportMatchId === dismissedReportMatchId || !summary || !navigator.clipboard) {
+            return;
+        }
+
+        let isCancelled = false;
+        void navigator.clipboard.writeText(summary).then(
+            () => {
+                if (!isCancelled) setCopied(true);
+            },
+            () => undefined,
+        );
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [dismissedReportMatchId, reportMatchId, summary]);
+
+    if (completed.length === 0) {
+        return null;
+    }
 
     return (
         <>
@@ -178,7 +219,7 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                     </tbody>
                 </table>
             </TableShell>
-            {selectedMatch && (
+            {activeMatch && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
                     role="presentation"
@@ -194,8 +235,8 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                     >
                         <div className="flex items-start justify-between gap-4">
                             <div>
-                                <h2 id="match-summary-title" className="text-lg font-semibold text-gray-900">Match summary</h2>
-                                <p className="mt-1 text-sm text-gray-500">Copy this summary to share the match stats.</p>
+                                <h2 id="match-summary-title" className="text-lg font-semibold text-gray-900">Match report</h2>
+                                <p className="mt-1 text-sm text-gray-500">Copy this report to share the match stats.</p>
                             </div>
                             <button
                                 type="button"
@@ -208,7 +249,7 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                         </div>
                         <textarea
                             readOnly
-                            value={getMatchSummary(selectedMatch)}
+                            value={getMatchSummary(activeMatch)}
                             onFocus={(event) => event.currentTarget.select()}
                             className="mt-4 min-h-48 w-full resize-y rounded border border-gray-300 p-3 text-sm text-gray-800 focus:border-salts-blue focus:outline-none focus:ring-2 focus:ring-salts-blue"
                             aria-label="Copyable match summary"

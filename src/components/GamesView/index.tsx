@@ -1,5 +1,6 @@
 "use client";
 import { CloseIcon } from "@/icons/close";
+import { BellAlertIcon } from "@/icons/bell-alert";
 
 import { useState, useMemo, useEffect, type SetStateAction } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -898,9 +899,12 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
                                             type="button"
                                             onClick={() => void handleNotifySubscribers(game)}
                                             disabled={notifyingGameId !== null}
-                                            className="text-green-700 hover:text-green-900 disabled:text-gray-400 text-sm"
+                                            aria-label={`Notify subscribers about Lions vs ${game.opposition_name}`}
+                                            title="Notify subscribers"
+                                            aria-busy={notifyingGameId === game.id}
+                                            className="inline-flex size-9 items-center justify-center rounded text-green-700 transition-colors hover:bg-green-100 hover:text-green-900 disabled:text-gray-400"
                                         >
-                                            {notifyingGameId === game.id ? "Sending..." : "Notify subscribers"}
+                                            <BellAlertIcon className={`size-5 ${notifyingGameId === game.id ? "animate-pulse" : ""}`} />
                                         </button>
                                         <button
                                             onClick={() => handleUpdateGameStatus(game.id, "in-progress")}

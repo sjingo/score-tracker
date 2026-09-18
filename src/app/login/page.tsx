@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "@/lib/auth-client";
+import { signIn, useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import Alert from "@/components/Alert";
 import Surface from "@/components/Surface";
 
 export default function LoginPage() {
     const router = useRouter();
+    const { refetch: refetchSession } = useSession();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -38,7 +39,8 @@ export default function LoginPage() {
                 return;
             }
 
-            router.push("/");
+            await refetchSession();
+            router.replace("/");
         } catch (err) {
             if (err instanceof DOMException && err.name === "AbortError") {
                 setError("Sign-in timed out. Please check your connection and try again.");
