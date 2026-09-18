@@ -135,6 +135,15 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
                     </Alert>
                 )}
 
+                {/* Stats Summary */}
+                <StatsSummary
+                    completedGames={filteredCompletedGames.length}
+                    goalsFor={filteredGoalsFor}
+                    goalsAgainst={filteredGoalsAgainst}
+                >
+                    <MatchForm matches={filteredGames} />
+                </StatsSummary>
+
                 {/* Filters */}
                 <Surface variant="panel" className="mb-4 p-3 sm:mb-6 sm:p-4">
                     <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
@@ -173,15 +182,6 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
                         </div>
                     </div>
                 </Surface>
-
-                {/* Stats Summary */}
-                <StatsSummary
-                    completedGames={filteredCompletedGames.length}
-                    goalsFor={filteredGoalsFor}
-                    goalsAgainst={filteredGoalsAgainst}
-                >
-                    <MatchForm matches={filteredGames} />
-                </StatsSummary>
             </div>
 
             {/* Tables and Results */}

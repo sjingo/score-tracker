@@ -8,6 +8,7 @@ import PageHeader from "@/components/PageHeader";
 import SectionHeading from "@/components/SectionHeading";
 import Alert from "@/components/Alert";
 import Surface from "@/components/Surface";
+import PushNotificationSettings from "@/components/PushNotificationSettings";
 
 export default function AccountPage() {
     const { data: session } = useSession();
@@ -147,6 +148,8 @@ export default function AccountPage() {
                             </button>
                         </form>
                     </section>
+
+                    <PushNotificationSettings />
                 </Surface>
             </PageContainer>
         </div>

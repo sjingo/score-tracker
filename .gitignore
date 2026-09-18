@@ -43,3 +43,5 @@ scripts/hash-password.ts
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+certificates

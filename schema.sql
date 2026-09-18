@@ -206,3 +206,19 @@ CREATE INDEX idx_game_saves_game_id ON game_saves(game_id);
 CREATE INDEX idx_game_saves_player_id ON game_saves(player_id);
 CREATE INDEX idx_game_shots_game_id ON game_shots(game_id);
 CREATE INDEX idx_season_stats_team_id ON season_stats(team_id);
+
+-- ==========================================================================
+-- 8. PUSH SUBSCRIPTIONS TABLE
+-- ==========================================================================
+
+CREATE TABLE push_subscriptions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
+  endpoint TEXT NOT NULL UNIQUE,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX idx_push_subscriptions_user_id ON push_subscriptions(user_id);

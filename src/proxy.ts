@@ -84,8 +84,12 @@ export async function proxy(request: NextRequest) {
     }
 
     const isAllowedUserRequest =
-      request.method === "GET" &&
-      ["/api/games", "/api/game-types", "/api/stats/xg"].includes(pathname);
+      (request.method === "GET" &&
+        ["/api/games", "/api/game-types", "/api/stats/xg"].includes(
+          pathname,
+        )) ||
+      pathname === "/api/push" ||
+      pathname === "/api/push/test";
     const isSignOutRequest =
       request.method === "POST" && pathname === "/api/proxy/sign-out";
 
