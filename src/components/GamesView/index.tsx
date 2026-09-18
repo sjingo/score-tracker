@@ -67,6 +67,8 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
     const [error, setError] = useState<string | null>(null);
     const [addingTeam, setAddingTeam] = useState(false);
     const [newTeamName, setNewTeamName] = useState("");
+    const [notifyingGameId, setNotifyingGameId] = useState<string | null>(null);
+    const [notificationMessage, setNotificationMessage] = useState<string | null>(null);
 
     // Combine query data with locally added teams
     const oppositionTeams: Team[] = [...teamsData, ...locallyAddedTeams];
@@ -548,6 +550,41 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
         }
     };
 
+    const handleNotifySubscribers = async (game: Game) => {
+        if (!window.confirm(`Notify subscribers about the ${game.score_for} - ${game.score_against} result against ${game.opposition_name}?`)) {
+            return;
+        }
+
+        setNotifyingGameId(game.id);
+        setNotificationMessage(null);
+        setError(null);
+
+        try {
+            const res = await fetch("/api/push/broadcast", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ gameId: game.id }),
+            });
+            const result = await res.json();
+
+            if (!res.ok || !result.success) {
+                throw new Error(result.error || "Unable to notify subscribers");
+            }
+
+            const sent = Number(result.sent || 0);
+            setNotificationMessage(
+                sent > 0
+                    ? `Match update sent to ${sent} subscribed device${sent === 1 ? "" : "s"}.`
+                    : "No subscribed devices were available for this update.",
+            );
+        } catch (err) {
+            console.error("[GamesView] Broadcast notification error:", err);
+            setError(err instanceof Error ? err.message : String(err));
+        } finally {
+            setNotifyingGameId(null);
+        }
+    };
+
     const activeGames = games.filter((g) => g.status === "in-progress");
     const completedGames = games.filter((g) => g.status === "completed");
     const activePlayers = useMemo(() => [{ id: OPPOSITION_GOAL, jersey_number: '0', name: 'Opposition Goal', is_active: true }, ...playersData.filter((p) => p.is_active)], [playersData]);
@@ -564,6 +601,11 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
             {error && (
                 <Alert className="mb-4 rounded border-red-400 bg-red-100 p-3 text-red-700 sm:p-4">
                     {error}
+                </Alert>
+            )}
+            {notificationMessage && (
+                <Alert tone="success" role="status" className="mb-4">
+                    {notificationMessage}
                 </Alert>
             )}
 
@@ -852,6 +894,14 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
                                             </p>
                                         </div>
                                         <div className="text-xl font-bold sm:text-2xl">{game.score_for} - {game.score_against}</div>
+                                        <button
+                                            type="button"
+                                            onClick={() => void handleNotifySubscribers(game)}
+                                            disabled={notifyingGameId !== null}
+                                            className="text-green-700 hover:text-green-900 disabled:text-gray-400 text-sm"
+                                        >
+                                            {notifyingGameId === game.id ? "Sending..." : "Notify subscribers"}
+                                        </button>
                                         <button
                                             onClick={() => handleUpdateGameStatus(game.id, "in-progress")}
                                             className="text-blue-600 hover:text-blue-900 text-sm"

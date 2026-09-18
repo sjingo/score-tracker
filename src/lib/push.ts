@@ -91,10 +91,10 @@ export function isValidPushSubscription(
 
   return Boolean(
     payload.keys &&
-      typeof payload.keys.p256dh === "string" &&
-      typeof payload.keys.auth === "string" &&
-      payload.keys.p256dh.length > 0 &&
-      payload.keys.auth.length > 0,
+    typeof payload.keys.p256dh === "string" &&
+    typeof payload.keys.auth === "string" &&
+    payload.keys.p256dh.length > 0 &&
+    payload.keys.auth.length > 0,
   );
 }
 
@@ -150,22 +150,14 @@ async function removeExpiredSubscription(endpoint: string) {
   ]);
 }
 
-export async function sendPushNotification(
-  userId: string,
+async function sendToSubscriptions(
+  subscriptions: StoredPushSubscription[],
   payload: PushNotificationPayload,
 ) {
-  configureWebPush();
-  await ensurePushSubscriptionsTable();
-
-  const result = await db().execute(
-    "SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = ?",
-    [userId],
-  );
-
   let sent = 0;
   let removed = 0;
 
-  for (const row of result.rows as unknown as StoredPushSubscription[]) {
+  for (const row of subscriptions) {
     try {
       await webpush.sendNotification(
         {
@@ -194,4 +186,38 @@ export async function sendPushNotification(
   }
 
   return { sent, removed };
+}
+
+export async function sendPushNotification(
+  userId: string,
+  payload: PushNotificationPayload,
+) {
+  configureWebPush();
+  await ensurePushSubscriptionsTable();
+
+  const result = await db().execute(
+    "SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = ?",
+    [userId],
+  );
+
+  return sendToSubscriptions(
+    result.rows as unknown as StoredPushSubscription[],
+    payload,
+  );
+}
+
+export async function sendPushNotificationToAll(
+  payload: PushNotificationPayload,
+) {
+  configureWebPush();
+  await ensurePushSubscriptionsTable();
+
+  const result = await db().execute(
+    "SELECT endpoint, p256dh, auth FROM push_subscriptions",
+  );
+
+  return sendToSubscriptions(
+    result.rows as unknown as StoredPushSubscription[],
+    payload,
+  );
 }
