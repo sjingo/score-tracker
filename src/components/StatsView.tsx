@@ -6,6 +6,11 @@ import { useXgStatsQuery } from "@/app/api/stats/useXgStatsQuery";
 import { useGamesQuery } from "@/app/api/games/hooks/useGamesQuery";
 import SyncButton from "@/components/SyncButton";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import LeaderboardStats, { LeaderboardEntry } from "@/components/LeaderboardStats";
+import PageContainer from "@/components/PageContainer";
+import PageHeader from "@/components/PageHeader";
+import Alert from "@/components/Alert";
+import Surface from "@/components/Surface";
 
 function formatDate(value: string) {
     return new Date(`${value.slice(0, 10)}T00:00:00Z`).toLocaleDateString();
@@ -20,16 +25,10 @@ type LeaderboardInput = {
     save_count?: number;
 };
 
-type LeaderboardRow = {
-    playerId: string;
-    playerName: string;
-    value: number;
-};
-
 function aggregateLeaderboard(
     entries: LeaderboardInput[],
     getValue: (entry: LeaderboardInput) => number | undefined,
-): LeaderboardRow[] {
+): LeaderboardEntry[] {
     const totals = entries.reduce((result, entry) => {
         const value = Number(getValue(entry));
         if (value <= 0) return result;
@@ -41,7 +40,7 @@ function aggregateLeaderboard(
             value: (current?.value ?? 0) + value,
         });
         return result;
-    }, new Map<string, LeaderboardRow>());
+    }, new Map<string, LeaderboardEntry>());
 
     return Array.from(totals.values()).sort((first, second) =>
         second.value - first.value || String(first.playerName).localeCompare(String(second.playerName)),
@@ -52,11 +51,6 @@ export default function StatsView() {
     const queryClient = useQueryClient();
     const [showOnlyGamesWithShots, setShowOnlyGamesWithShots] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
-    const [expandedLeaderboards, setExpandedLeaderboards] = useState<Record<string, boolean>>({
-        scorers: true,
-        assists: true,
-        saves: true,
-    });
     const {
         data: games = [],
         isLoading,
@@ -124,13 +118,6 @@ export default function StatsView() {
         playerCount: leaderboard.entries.length,
     }));
 
-    const toggleLeaderboard = (key: string) => {
-        setExpandedLeaderboards((current) => ({
-            ...current,
-            [key]: !current[key],
-        }));
-    };
-
     if (isLoading || isLoadingPlayerStats) {
         return <LoadingSpinner label="Loading stats..." className="mx-auto max-w-6xl" />;
     }
@@ -140,104 +127,49 @@ export default function StatsView() {
     const refreshError = xgQueryError?.message || playerStatsQueryError?.message;
 
     if (hasFatalError) {
-        return <div className="max-w-6xl mx-auto px-4 py-8 text-red-700">Failed to load xG stats.</div>;
+        return <PageContainer className="text-red-700">Failed to load xG stats.</PageContainer>;
     }
 
     return (
-        <div className="max-w-6xl mx-auto px-4 py-8">
-            <div className="mb-6 flex items-start justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Stats</h1>
-
-                    {refreshError && (
-                        <div className="mb-6 rounded border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-                            Refresh failed. Showing the last loaded stats. {refreshError}
-                        </div>
-                    )}
-                    <p className="mt-2 text-gray-600">Overview and details of all team xg and player stats.</p>
-                </div>
-                <SyncButton
+        <PageContainer>
+            <PageHeader
+                title="Stats"
+                description={
+                    <>
+                        {refreshError && (
+                            <Alert tone="warning" className="mb-4">
+                                Refresh failed. Showing the last loaded stats. {refreshError}
+                            </Alert>
+                        )}
+                        <p>Overview and details of all team xg and player stats.</p>
+                    </>
+                }
+                actions={<SyncButton
                     onClick={handleSync}
                     disabled={isSyncing || isLoading}
                     title="Refresh stats from server"
                     isSyncing={isSyncing}
-                />
-            </div>
+                />}
+            />
 
-            <section className="mb-6 rounded-lg bg-salts-blue p-6 text-white shadow">
-                <div className="flex flex-wrap items-end justify-between gap-6">
-                    <div>
-                        <p className="text-sm font-semibold uppercase tracking-wide text-amber-200">All recorded shot games</p>
-                        <p className="mt-1 text-sm text-blue-100">Games without shots are excluded from this total.</p>
-                    </div>
+            <Surface variant="panel" className="mb-4 p-4 sm:mb-6 sm:p-6">
+                <h2 className="text-xl font-bold text-white sm:text-2xl">Average xG per game</h2>
+                <div className="flex flex-wrap items-end justify-between gap-4 sm:gap-6">
                     <div className="text-right">
-                        <p className="text-sm text-blue-100">Average xG per game</p>
-                        <p className="text-5xl font-bold tracking-tight">{averageXg.toFixed(2)}</p>
+                        <p className="p-2 text-4xl font-bold tracking-tight text-amber-200 sm:text-5xl">{averageXg.toFixed(2)}</p>
                     </div>
                 </div>
-                <div className="mt-5 flex flex-wrap gap-x-8 gap-y-2 border-t border-blue-400 pt-4 text-sm text-blue-100">
+                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-t border-blue-400 pt-3 text-sm text-white sm:mt-5 sm:gap-x-8 sm:pt-4">
                     <span>{gamesWithShots.length} games</span>
                     <span>{totalShots} shots</span>
                     <span>{averageShots.toFixed(1)} shots per game</span>
                     <span>{totalXg.toFixed(2)} total xG</span>
-                    <span>{actualGoals} actual goals</span>
-                    <span>Goals minus xG: <strong className="text-white">{(actualGoals - totalXg).toFixed(2)}</strong></span>
                 </div>
-            </section>
+            </Surface>
 
-            <section className="mb-6 rounded-lg bg-salts-blue p-6 text-white shadow">
-                <div className="mb-5">
-                    <h2 className="text-2xl font-bold text-white">Player stats</h2>
-                    <p className="mt-1 text-blue-100">Recorded player contributions across all games.</p>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-3">
-                    {leaderboardStats.map((leaderboard) => (
-                        <div key={leaderboard.key} className="border-l-4 border-amber-200 pl-4">
-                            <p className="text-sm font-semibold uppercase tracking-wide text-amber-200">{leaderboard.summaryLabel}</p>
-                            <p className="mt-1 text-3xl font-bold text-white">{leaderboard.totalValue}</p>
-                            <p className="text-sm text-blue-100">across {leaderboard.playerCount} players</p>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            <section className="mb-6 grid gap-4 lg:grid-cols-3">
-                {leaderboardStats.map((leaderboard) => (
-                    <section key={leaderboard.key} className="rounded-lg bg-white p-5 shadow">
-                        <button
-                            type="button"
-                            onClick={() => toggleLeaderboard(leaderboard.key)}
-                            aria-expanded={expandedLeaderboards[leaderboard.key]}
-                            className="flex w-full items-center justify-between gap-3 text-left"
-                        >
-                            <span>
-                                <span className="block text-xl font-semibold text-gray-900">{leaderboard.title}</span>
-                                <span className="mt-1 block text-sm text-gray-500">{leaderboard.playerCount} players · {leaderboard.totalValue} total</span>
-                            </span>
-                            <span className="text-xl text-gray-500" aria-hidden="true">{expandedLeaderboards[leaderboard.key] ? "−" : "+"}</span>
-                        </button>
-                        {expandedLeaderboards[leaderboard.key] && (
-                            <div className="mt-4 border-t border-gray-100 pt-4">
-                                {leaderboard.entries.length === 0 ? (
-                                    <p className="text-sm italic text-gray-500">No players with recorded stats.</p>
-                                ) : (
-                                    <ol className="space-y-3">
-                                        {leaderboard.entries.map((entry, index) => (
-                                            <li key={entry.playerId} className="flex items-center justify-between gap-3 border-b border-gray-100 pb-2 last:border-0 last:pb-0">
-                                                <span className="flex min-w-0 items-center gap-3">
-                                                    <span className="w-5 text-sm font-semibold text-gray-400">{index + 1}</span>
-                                                    <span className="truncate text-gray-800">{entry.playerName}</span>
-                                                </span>
-                                                <span className="shrink-0 font-bold text-salts-blue">{entry.value}</span>
-                                            </li>
-                                        ))}
-                                    </ol>
-                                )}
-                            </div>
-                        )}
-                    </section>
-                ))}
-            </section>
+            <LeaderboardStats
+                leaderboards={leaderboardStats}
+            />
 
             <label className="mb-6 flex items-center gap-3 text-sm text-gray-700">
                 <input
@@ -250,33 +182,33 @@ export default function StatsView() {
             </label>
 
             {visibleGames.length === 0 ? (
-                <div className="rounded-lg bg-white p-6 text-center text-gray-500 shadow">
+                <Surface className="p-4 text-center text-gray-500 sm:p-6">
                     {showOnlyGamesWithShots ? "No games with recorded shots found." : "No games found."}
-                </div>
+                </Surface>
             ) : (
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                     {visibleGames.map((game) => (
-                        <section key={game.gameId} className="rounded-lg bg-white p-6 shadow">
-                            <div className="flex flex-wrap items-start justify-between gap-4 border-b pb-4">
+                        <Surface key={game.gameId} className="p-4 sm:p-6">
+                            <div className="flex flex-wrap items-start justify-between gap-3 border-b pb-3 sm:gap-4 sm:pb-4">
                                 <div>
                                     <h2 className="text-xl font-semibold text-gray-900">Lions vs {game.oppositionName}</h2>
                                     <p className="text-sm text-gray-500">{formatDate(game.matchDate)} · {game.status}</p>
                                 </div>
-                                <div className="flex gap-6 text-right">
+                                <div className="flex gap-4 text-right sm:gap-6">
                                     <div>
                                         <div className="text-sm text-gray-500">xG</div>
-                                        <div className="text-3xl font-bold text-blue-600">{game.totalXg.toFixed(2)}</div>
+                                        <div className="text-2xl font-bold text-blue-600 sm:text-3xl">{game.totalXg.toFixed(2)}</div>
                                     </div>
                                     <div>
                                         <div className="text-sm text-gray-500">Actual goals</div>
-                                        <div className="text-3xl font-bold text-green-600">{game.actualGoals}</div>
+                                        <div className="text-2xl font-bold text-green-600 sm:text-3xl">{game.actualGoals}</div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                            <div className="mt-3 grid gap-2 sm:mt-4 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
                                 {game.breakdown.map((item) => (
-                                    <div key={item.type} className="rounded border border-salts-blue p-4">
+                                    <div key={item.type} className="rounded border border-salts-blue p-3 sm:p-4">
                                         <div className="font-semibold text-gray-900">{item.label}</div>
                                         <div className="mt-2 text-sm text-gray-600">
                                             {item.count} shots × {item.value.toFixed(2)}
@@ -286,14 +218,14 @@ export default function StatsView() {
                                 ))}
                             </div>
 
-                            <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t pt-4 text-sm text-gray-600">
+                            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 border-t pt-3 text-sm text-gray-600 sm:mt-4 sm:gap-x-6 sm:pt-4">
                                 <span>{game.totalShots} total shots</span>
                                 <span>Goals minus xG: <strong className="text-gray-900">{(game.actualGoals - game.totalXg).toFixed(2)}</strong></span>
                             </div>
-                        </section>
+                        </Surface>
                     ))}
                 </div>
             )}
-        </div>
+        </PageContainer>
     );
 }

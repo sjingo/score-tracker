@@ -1,4 +1,6 @@
 import { Game, GameType } from '../types';
+import Alert from '@/components/Alert';
+import TableShell from './TableShell';
 
 interface MatchesTableProps {
     matches: Game[];
@@ -24,38 +26,27 @@ export default function MatchesTable({ matches, gameType, sortBy }: MatchesTable
 
     if (sorted.length === 0) {
         return (
-            <div className="p-6 bg-gray-50 rounded-lg text-center text-gray-500">
+            <Alert tone="info" className="rounded-lg border-0 p-4 text-center sm:p-6">
                 No matches found
-            </div>
+            </Alert>
         );
     }
 
     return (
-        <div className="overflow-x-auto bg-white rounded-lg shadow">
-            {gameType && (
-                <div className="px-6 py-3 bg-gray-50 border-b border-salts-blue">
-                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                        <span
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: gameType.color || '#999' }}
-                        />
-                        {gameType.display_name}
-                    </h3>
-                </div>
-            )}
-            <table className="w-full">
+        <TableShell gameType={gameType}>
+            <table className="w-full min-w-[640px]">
                 <thead className="bg-gray-100 border-b border-salts-blue">
                     <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Date</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Opposition</th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Score</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Venue</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-700 sm:px-6 sm:py-3">Date</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-700 sm:px-6 sm:py-3">Opposition</th>
+                        <th className="px-3 py-2 text-center text-xs font-medium uppercase text-gray-700 sm:px-6 sm:py-3">Score</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-700 sm:px-6 sm:py-3">Venue</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                     {sorted.map((match) => (
                         <tr key={match.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 text-sm text-gray-900">
+                            <td className="px-3 py-3 text-sm text-gray-900 sm:px-6 sm:py-4">
                                 {new Date(match.match_date).toLocaleDateString('en-US', {
                                     weekday: 'short',
                                     month: 'short',
@@ -63,21 +54,21 @@ export default function MatchesTable({ matches, gameType, sortBy }: MatchesTable
                                     year: 'numeric',
                                 })}
                             </td>
-                            <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                            <td className="px-3 py-3 text-sm font-medium text-gray-900 sm:px-6 sm:py-4">
                                 {match.opposition_name}
                             </td>
-                            <td className="px-6 py-4 text-sm text-center font-semibold">
+                            <td className="px-3 py-3 text-center text-sm font-semibold sm:px-6 sm:py-4">
                                 <span className="inline-flex items-center justify-center min-w-12 px-2 py-1 bg-blue-100 text-blue-700 rounded">
                                     {match.score_for} - {match.score_against}
                                 </span>
                             </td>
-                            <td className="px-6 py-4 text-sm text-gray-600">
+                            <td className="px-3 py-3 text-sm text-gray-600 sm:px-6 sm:py-4">
                                 {match.location || 'N/A'}
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
-        </div>
+        </TableShell>
     );
 }

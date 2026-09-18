@@ -5,6 +5,7 @@ import {
     ShotType,
 } from "@/app/api/games/hooks/useGameShotMutation";
 import { useGameShotsQuery } from "@/app/api/games/hooks/useGameShotsQuery";
+import Alert from "@/components/Alert";
 
 interface ShotsPanelProps {
     game: Game;
@@ -29,8 +30,8 @@ export default function ShotsPanel({
 
     return (
         <div className="mb-4">
-            <div className="flex justify-between items-center mb-2">
-                <h4 className="font-semibold">Shots:</h4>
+            <div className="mb-2 flex items-center justify-between">
+                <h4 className="text-sm font-semibold sm:text-base">Shots:</h4>
                 <button
                     type="button"
                     aria-expanded={isExpanded}
@@ -42,16 +43,16 @@ export default function ShotsPanel({
                 </button>
             </div>
             {isExpanded && (
-                <div id={`${game.id}-shots-panel`} className="bg-teal-50 p-3 rounded">
-                    {shotError && <div className="bg-red-100 text-red-700 p-2 rounded mb-2 text-sm">{shotError}</div>}
-                    <div className="grid grid-cols-2 gap-2 mb-4">
+                <div id={`${game.id}-shots-panel`} className="rounded bg-teal-50 p-2 sm:p-3">
+                    {shotError && <Alert className="mb-2 rounded border-red-200 bg-red-100 p-2">{shotError}</Alert>}
+                    <div className="mb-3 grid grid-cols-1 gap-2 sm:mb-4 sm:grid-cols-2">
                         {SHOT_OPTIONS.map((option) => (
                             <button
                                 key={option.type}
                                 type="button"
                                 disabled={isPending}
                                 onClick={() => onRecordShot(option.type)}
-                                className="rounded bg-teal-700 px-3 py-3 text-sm font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="rounded bg-teal-700 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-50 sm:py-3"
                             >
                                 <span className="block">{option.label}</span>
                                 <span className="block text-xs font-normal">{option.xg.toFixed(2)} xG</span>
@@ -79,7 +80,7 @@ export default function ShotsPanel({
                                         </div>
                                     </div>
                                     {isEditing && (
-                                        <div className="mt-2 grid grid-cols-2 gap-2">
+                                        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                                             {SHOT_OPTIONS.map((editOption) => (
                                                 <button
                                                     key={editOption.type}

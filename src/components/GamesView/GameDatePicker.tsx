@@ -24,7 +24,7 @@ export default function GameDatePicker({
             onChange={(event) => onChange(event.target.value)}
             disabled={isPending}
             aria-label="Game date"
-            className="border border-gray-300 rounded px-2 py-1 text-sm text-gray-900"
+            className="rounded border border-gray-300 px-1.5 py-0.5 text-xs text-gray-900 sm:px-2 sm:py-1 sm:text-sm"
         />
     );
 }

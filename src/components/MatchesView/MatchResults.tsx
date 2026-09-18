@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Game, GameType } from '../types';
+import TableShell from './TableShell';
 
 interface MatchResultsProps {
     matches: Game[];
@@ -42,6 +43,16 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
         return players
             .map((player) => {
                 const name = player.player_name || player.anonymised_id || 'Unknown player';
+                const count = player[countKey];
+                return count && count > 1 ? `${name} (${count})` : name;
+            })
+            .join(', ');
+    };
+
+    const formatTablePlayers = (players: Array<{ player_name?: string; anonymised_id?: string; goal_count?: number; assist_count?: number; save_count?: number }>, countKey: 'goal_count' | 'assist_count' | 'save_count') => {
+        return players
+            .map((player) => {
+                const name = (player.player_name || player.anonymised_id || 'Unknown player').trim().split(/\s+/)[0];
                 const count = player[countKey];
                 return count && count > 1 ? `${name} (${count})` : name;
             })
@@ -99,28 +110,17 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
     };
 
     return (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-            {gameType && (
-                <div className="px-6 py-3 bg-gray-50 border-b border-salts-blue">
-                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                        <span
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: gameType.color || '#999' }}
-                        />
-                        {gameType.display_name} - Results
-                    </h3>
-                </div>
-            )}
-            <div className="overflow-x-auto">
-                <table className="w-full">
+        <>
+            <TableShell gameType={gameType} titleSuffix=" - Results">
+                <table className="w-full min-w-[900px]">
                     <thead className="bg-gray-100 border-b border-salts-blue">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Match</th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Score</th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Result</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Scorers</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Assists</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Saves</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-700 sm:px-6 sm:py-3">Match</th>
+                            <th className="px-3 py-2 text-center text-xs font-medium uppercase text-gray-700 sm:px-6 sm:py-3">Score</th>
+                            <th className="px-3 py-2 text-center text-xs font-medium uppercase text-gray-700 sm:px-6 sm:py-3">Result</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-700 sm:px-6 sm:py-3">Scorers</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-700 sm:px-6 sm:py-3">Assists</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-700 sm:px-6 sm:py-3">Saves</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -129,13 +129,13 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                             const scorers = truncateScorers(match.scorers || []);
                             const assists = truncateScorers(match.assists || []);
                             const saves = truncateScorers(match.saves || []);
-                            const hasMoreScorers = false;
-                            const hasMoreAssists = false;
-                            const hasMoreSaves = false;
+                            const scorerNames = formatTablePlayers(scorers, 'goal_count');
+                            const assistNames = formatTablePlayers(assists, 'assist_count');
+                            const saveNames = formatTablePlayers(saves, 'save_count');
 
                             return (
                                 <tr key={match.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4">
+                                    <td className="px-3 py-3 sm:px-6 sm:py-4">
                                         <button
                                             type="button"
                                             onClick={() => openSummary(match)}
@@ -144,7 +144,7 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                                         >
                                             Lions vs {match.opposition_name}
                                         </button>
-                                        <div className="text-sm font-semibold text-gray-500 mt-1">
+                                        <div className="mt-1 text-sm font-semibold text-gray-500">
                                             {new Date(match.match_date).toLocaleDateString('en-US', {
                                                 weekday: 'short',
                                                 month: 'short',
@@ -153,79 +153,31 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                                             })}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-center">
-                                        <div className="text-lg font-bold text-gray-900 whitespace-nowrap">
+                                    <td className="px-3 py-3 text-center sm:px-6 sm:py-4">
+                                        <div className="whitespace-nowrap text-lg font-bold text-gray-900">
                                             {match.score_for} - {match.score_against}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-center">
+                                    <td className="px-3 py-3 text-center sm:px-6 sm:py-4">
                                         <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${result.color}`}>
                                             {result.text}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <div className="text-xs text-gray-700 leading-relaxed">
-                                            {scorers.length > 0 ? (
-                                                <div>
-                                                    {scorers.map((scorer, idx) => (
-                                                        <div key={idx}>
-                                                            {scorer.player_name || scorer.anonymised_id}
-                                                            {scorer.goal_count !== undefined && scorer.goal_count > 1 && ` (${scorer.goal_count})`}
-                                                        </div>
-                                                    ))}
-                                                    {hasMoreScorers && (
-                                                        <div className="text-gray-500 italic">+{(match.scorers?.length || 0) - 4} more</div>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <span className="text-gray-400">-</span>
-                                            )}
-                                        </div>
+                                    <td className="px-3 py-3 sm:px-6 sm:py-4">
+                                        <div className="text-xs leading-relaxed text-gray-700">{scorerNames || <span className="text-gray-400">-</span>}</div>
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <div className="text-xs text-gray-700 leading-relaxed">
-                                            {assists.length > 0 ? (
-                                                <div>
-                                                    {assists.map((assist, idx) => (
-                                                        <div key={idx}>
-                                                            {assist.player_name || assist.anonymised_id}
-                                                            {assist.assist_count !== undefined && assist.assist_count > 1 && ` (${assist.assist_count})`}
-                                                        </div>
-                                                    ))}
-                                                    {hasMoreAssists && (
-                                                        <div className="text-gray-500 italic">+{(match.assists?.length || 0) - 4} more</div>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <span className="text-gray-400">-</span>
-                                            )}
-                                        </div>
+                                    <td className="px-3 py-3 sm:px-6 sm:py-4">
+                                        <div className="text-xs leading-relaxed text-gray-700">{assistNames || <span className="text-gray-400">-</span>}</div>
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <div className="text-xs text-gray-700 leading-relaxed">
-                                            {saves.length > 0 ? (
-                                                <div>
-                                                    {saves.map((save, idx) => (
-                                                        <div key={idx}>
-                                                            {save.player_name || save.anonymised_id}
-                                                            {save.save_count !== undefined && save.save_count > 1 && ` (${save.save_count})`}
-                                                        </div>
-                                                    ))}
-                                                    {hasMoreSaves && (
-                                                        <div className="text-gray-500 italic">+{(match.saves?.length || 0) - 4} more</div>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <span className="text-gray-400">-</span>
-                                            )}
-                                        </div>
+                                    <td className="px-3 py-3 sm:px-6 sm:py-4">
+                                        <div className="text-xs leading-relaxed text-gray-700">{saveNames || <span className="text-gray-400">-</span>}</div>
                                     </td>
                                 </tr>
                             );
                         })}
                     </tbody>
                 </table>
-            </div>
+            </TableShell>
             {selectedMatch && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
@@ -238,7 +190,7 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby="match-summary-title"
-                        className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl"
+                        className="w-full max-w-lg rounded-lg bg-white p-4 shadow-xl sm:p-6"
                     >
                         <div className="flex items-start justify-between gap-4">
                             <div>
@@ -261,7 +213,7 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                             className="mt-4 min-h-48 w-full resize-y rounded border border-gray-300 p-3 text-sm text-gray-800 focus:border-salts-blue focus:outline-none focus:ring-2 focus:ring-salts-blue"
                             aria-label="Copyable match summary"
                         />
-                        <div className="mt-4 flex justify-end gap-3">
+                        <div className="mt-4 flex flex-wrap justify-end gap-2 sm:gap-3">
                             <button
                                 type="button"
                                 onClick={closeSummary}
@@ -280,6 +232,6 @@ export default function MatchResults({ matches, gameType }: MatchResultsProps) {
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 }

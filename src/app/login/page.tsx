@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { signIn } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import Alert from "@/components/Alert";
+import Surface from "@/components/Surface";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -52,23 +54,23 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-            <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6">
-                <h1 className="text-3xl font-bold text-center mb-2 text-gray-900">
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-3 py-6 sm:px-4 sm:py-8">
+            <Surface className="w-full max-w-md p-5 sm:p-6">
+                <h1 className="mb-2 text-center text-2xl font-bold text-gray-900 sm:text-3xl">
                     Login
                 </h1>
-                <p className="text-center text-gray-600 mb-8">Sign in to your account</p>
+                <p className="mb-6 text-center text-sm text-gray-600 sm:mb-8">Sign in to your account</p>
 
                 {error && (
-                    <div role="alert" className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                    <Alert className="mb-4">
                         {error}
-                    </div>
+                    </Alert>
                 )}
 
                 {/* Email Sign In Form */}
-                <form onSubmit={handleEmailSignIn} className="space-y-4 mb-6">
+                <form onSubmit={handleEmailSignIn} className="mb-6 space-y-4">
                     <div>
-                        <label htmlFor="email" className="block text-sm font-medium mb-2">
+                        <label htmlFor="email" className="mb-2 block text-sm font-medium">
                             Email
                         </label>
                         <input
@@ -79,13 +81,13 @@ export default function LoginPage() {
                             placeholder="you@example.com"
                             autoComplete="email"
                             disabled={isLoading}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-salts-blue"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-salts-blue sm:px-4 sm:py-2"
                             required
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="password" className="block text-sm font-medium mb-2">
+                        <label htmlFor="password" className="mb-2 block text-sm font-medium">
                             Password
                         </label>
                         <input
@@ -96,7 +98,7 @@ export default function LoginPage() {
                             placeholder="Your password"
                             autoComplete="current-password"
                             disabled={isLoading}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-salts-blue"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-salts-blue sm:px-4 sm:py-2"
                             required
                         />
                     </div>
@@ -105,7 +107,7 @@ export default function LoginPage() {
                         type="submit"
                         disabled={isLoading}
                         aria-busy={isLoading}
-                        className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+                        className="w-full rounded-lg bg-blue-600 px-3 py-1.5 font-medium text-white transition-colors hover:bg-blue-700 disabled:bg-gray-400 sm:px-4 sm:py-2"
                     >
                         {isLoading ? "Checking your details..." : "Sign In"}
                     </button>
@@ -115,7 +117,7 @@ export default function LoginPage() {
                         </p>
                     )}
                 </form>
-            </div>
+            </Surface>
         </div>
     );
 }

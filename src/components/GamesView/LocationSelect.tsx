@@ -26,7 +26,7 @@ export default function LocationSelect({
                 value={location || ""}
                 disabled={isPending}
                 onChange={(event) => onChange(event.target.value)}
-                className="border border-gray-300 rounded px-1 py-0.5 bg-white text-gray-700"
+                className="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-xs text-gray-700 sm:px-2 sm:py-1 sm:text-sm"
             >
                 <option value="">Select location</option>
                 <option value="home">Home</option>

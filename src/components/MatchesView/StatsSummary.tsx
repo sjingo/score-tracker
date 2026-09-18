@@ -14,26 +14,26 @@ export default function StatsSummary({
     children,
 }: StatsSummaryProps) {
     return (
-        <div className="grid grid-cols-2 gap-4 mb-2 md:grid-cols-4">
-            <div className="bg-salts-blue rounded-lg shadow p-2 flex items-center gap-2">
-                <span className="text-2xl font-bold text-amber-200">
+        <div className="mb-2 grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
+            <div className="flex items-center justify-center gap-1.5 rounded-lg bg-salts-blue p-2 shadow md:gap-2 md:p-3">
+                <span className="text-xl font-bold text-amber-200 md:text-2xl">
                     {completedGames}
                 </span>
-                <span className="text-blue-100 text-sm"> Matches </span>
+                <span className="whitespace-nowrap text-sm text-white">Matches</span>
             </div>
-            <div className="bg-salts-blue rounded-lg shadow p-2 flex items-center gap-2">
-                <span className="text-xl font-bold text-amber-200">
+            <div className="flex items-center justify-center gap-1.5 rounded-lg bg-salts-blue p-2 shadow md:gap-2 md:p-3">
+                <span className="text-xl font-bold text-amber-200 md:text-2xl">
                     {goalsFor}
                 </span>
-                <span className="text-blue-100 text-sm"> Scored</span>
+                <span className="whitespace-nowrap text-sm text-white">Scored</span>
             </div>
-            <div className="bg-salts-blue rounded-lg shadow p-2 flex items-center gap-2">
-                <span className="text-2xl font-bold text-amber-200">
+            <div className="flex items-center justify-center gap-1.5 rounded-lg bg-salts-blue p-2 shadow md:gap-2 md:p-3">
+                <span className="text-xl font-bold text-amber-200 md:text-2xl">
                     {goalsAgainst}
                 </span>
-                <span className="text-blue-100 text-sm"> Conceded</span>
+                <span className="whitespace-nowrap text-sm text-white">Conceded</span>
             </div>
-            <div className="bg-white rounded-lg shadow p-2 flex justify-center items-center gap-2">
+            <div className="flex items-center justify-center gap-1.5 rounded-lg bg-white p-2 shadow md:gap-2 md:p-3">
                 {children}
             </div>
         </div>

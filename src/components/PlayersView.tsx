@@ -4,6 +4,11 @@ import { useState } from "react";
 import { usePlayersQuery } from "@/app/api/players/hooks/usePlayersQuery";
 import { useCreatePlayerMutation } from "@/app/api/players/hooks/useCreatePlayerMutation";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import PageContainer from "@/components/PageContainer";
+import PageHeader from "@/components/PageHeader";
+import SectionHeading from "@/components/SectionHeading";
+import Alert from "@/components/Alert";
+import Surface from "@/components/Surface";
 
 export default function PlayersView() {
     const [newPlayer, setNewPlayer] = useState({
@@ -32,18 +37,18 @@ export default function PlayersView() {
     if (isLoading) return <LoadingSpinner label="Loading players..." className="mx-auto max-w-4xl" />;
 
     return (
-        <div className="max-w-4xl mx-auto p-4">
-            <h1 className="text-3xl font-bold mb-6 sr-only">Lions Squad</h1>
+        <PageContainer size="content">
+            <PageHeader title="Lions Squad" />
             {isError && (
-                <div className="mb-4 rounded border border-red-200 bg-red-50 p-3 text-red-700">
+                <Alert className="mb-4">
                     {error instanceof Error ? error.message : "Failed to load players"}
-                </div>
+                </Alert>
             )}
 
-            <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-                <h2 className="text-xl font-semibold mb-4">Add Player</h2>
+            <Surface className="mb-4 p-4 sm:mb-6 sm:p-6">
+                <SectionHeading title="Add Player" />
                 <form onSubmit={handleAddPlayer} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                         <input
                             type="text"
                             placeholder="Player name"
@@ -52,7 +57,7 @@ export default function PlayersView() {
                                 setNewPlayer({ ...newPlayer, name: e.target.value })
                             }
                             required
-                            className="border p-2 rounded"
+                            className="rounded border px-3 py-1.5 sm:p-2"
                         />
                         <input
                             type="number"
@@ -61,39 +66,39 @@ export default function PlayersView() {
                             onChange={(e) =>
                                 setNewPlayer({ ...newPlayer, jerseyNumber: e.target.value })
                             }
-                            className="border p-2 rounded"
+                            className="rounded border px-3 py-1.5 sm:p-2"
                         />
                     </div>
                     <button
                         type="submit"
                         disabled={addPlayerMutation.isPending}
-                        className="bg-salts-blue text-white px-4 py-2 rounded hover:bg-salts-blue disabled:opacity-60"
+                        className="rounded bg-salts-blue px-3 py-1.5 text-white hover:bg-salts-blue disabled:opacity-60 sm:px-4 sm:py-2"
                     >
                         {addPlayerMutation.isPending ? "Adding..." : "Add Player"}
                     </button>
                 </form>
-            </div>
+            </Surface>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {players.length === 0 ? (
-                    <p className="col-span-full text-gray-500 text-center py-6">
+                    <p className="col-span-full py-4 text-center text-gray-500 sm:py-6">
                         No players yet. Add one above!
                     </p>
                 ) : (
                     players.map((player) => (
                         <div
                             key={player.id}
-                            className="min-w-0 bg-white p-2 rounded-lg shadow-md border-l-4 border-salts-blue"
+                            className="min-w-0 rounded-lg border-l-4 border-salts-blue bg-white p-3 shadow-md sm:p-4"
                         >
                             <div className="flex min-w-0 items-start justify-between">
                                 <div className="min-w-0 w-full">
                                     <div className="flex min-w-0 w-full justify-between">
-                                        <h3 className="break-words font-semibold text-lg">
+                                        <h3 className="break-words text-base font-semibold sm:text-lg">
                                             {player.name}
                                         </h3>
                                     </div>
                                     {player.jersey_number && (
-                                        <p className="text-2xl font-bold text-blue-600">
+                                        <p className="text-xl font-bold text-blue-600 sm:text-2xl">
                                             #{player.jersey_number}
                                         </p>
                                     )}
@@ -104,6 +109,6 @@ export default function PlayersView() {
                     ))
                 )}
             </div>
-        </div >
+        </PageContainer>
     );
 }
