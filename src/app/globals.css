@@ -33,6 +33,28 @@ body {
   min-height: calc(100dvh - var(--app-header-offset));
 }
 
+.app-loading {
+  display: grid;
+  flex: 1;
+  min-height: calc(100dvh - var(--app-header-offset));
+  place-items: center;
+  padding: 2rem 1rem;
+  background: #f7faff;
+}
+
+.app-loading-logo {
+  display: block;
+  width: 6rem;
+  height: 6rem;
+  animation: app-loading-spin 1.4s linear infinite;
+}
+
+@keyframes app-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @keyframes leaderboard-overlay-in {
   from {
     opacity: 0;
@@ -61,7 +83,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .leaderboard-drawer-overlay,
-  .leaderboard-drawer {
+  .leaderboard-drawer,
+  .app-loading-logo {
     animation: none;
   }
 }
