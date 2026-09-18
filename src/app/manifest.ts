@@ -5,6 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Lions Score Tracker",
     short_name: "Lions",
     description: "Track scores and manage your Lions team",
+    id: "/",
     start_url: "/",
     scope: "/",
     display: "standalone",
@@ -25,6 +26,22 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",
+      },
+    ],
+    screenshots: [
+      {
+        src: "/screenshots/lions-mobile.png",
+        sizes: "390x844",
+        type: "image/png",
+        form_factor: "narrow",
+        label: "Lions Score Tracker on mobile",
+      },
+      {
+        src: "/screenshots/lions-wide.png",
+        sizes: "1440x900",
+        type: "image/png",
+        form_factor: "wide",
+        label: "Lions Score Tracker on desktop",
       },
     ],
   };
