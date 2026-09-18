@@ -29,9 +29,11 @@ interface GamesViewProps {
     onInProgressGameChange?: (hasInProgressGame: boolean) => void;
 }
 
+const EMPTY_GAMES: Game[] = [];
+
 export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
     const queryClient = useQueryClient();
-    const { data: queryGames = [], isLoading: gamesLoading } = useGamesQuery();
+    const { data: queryGames = EMPTY_GAMES, isLoading: gamesLoading } = useGamesQuery();
     // Local state for UI interactions and optimistic updates
     const [games, setLocalGames] = useState<Game[]>(queryGames);
     const [showCreatePanel, setShowCreatePanel] = useState(false);

@@ -6,6 +6,7 @@ import { useXgStatsQuery } from "@/app/api/stats/useXgStatsQuery";
 import { useGamesQuery } from "@/app/api/games/hooks/useGamesQuery";
 import SyncButton from "@/components/SyncButton";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import LeaderboardStats, { LeaderboardEntry } from "@/components/LeaderboardStats";
 
 function formatDate(value: string) {
     return new Date(`${value.slice(0, 10)}T00:00:00Z`).toLocaleDateString();
@@ -20,16 +21,10 @@ type LeaderboardInput = {
     save_count?: number;
 };
 
-type LeaderboardRow = {
-    playerId: string;
-    playerName: string;
-    value: number;
-};
-
 function aggregateLeaderboard(
     entries: LeaderboardInput[],
     getValue: (entry: LeaderboardInput) => number | undefined,
-): LeaderboardRow[] {
+): LeaderboardEntry[] {
     const totals = entries.reduce((result, entry) => {
         const value = Number(getValue(entry));
         if (value <= 0) return result;
@@ -41,7 +36,7 @@ function aggregateLeaderboard(
             value: (current?.value ?? 0) + value,
         });
         return result;
-    }, new Map<string, LeaderboardRow>());
+    }, new Map<string, LeaderboardEntry>());
 
     return Array.from(totals.values()).sort((first, second) =>
         second.value - first.value || String(first.playerName).localeCompare(String(second.playerName)),
@@ -185,59 +180,11 @@ export default function StatsView() {
                 </div>
             </section>
 
-            <section className="mb-6 rounded-lg bg-salts-blue p-6 text-white shadow">
-                <div className="mb-5">
-                    <h2 className="text-2xl font-bold text-white">Player stats</h2>
-                    <p className="mt-1 text-blue-100">Recorded player contributions across all games.</p>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-3">
-                    {leaderboardStats.map((leaderboard) => (
-                        <div key={leaderboard.key} className="border-l-4 border-amber-200 pl-4">
-                            <p className="text-sm font-semibold uppercase tracking-wide text-amber-200">{leaderboard.summaryLabel}</p>
-                            <p className="mt-1 text-3xl font-bold text-white">{leaderboard.totalValue}</p>
-                            <p className="text-sm text-blue-100">across {leaderboard.playerCount} players</p>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            <section className="mb-6 grid gap-4 lg:grid-cols-3">
-                {leaderboardStats.map((leaderboard) => (
-                    <section key={leaderboard.key} className="rounded-lg bg-white p-5 shadow">
-                        <button
-                            type="button"
-                            onClick={() => toggleLeaderboard(leaderboard.key)}
-                            aria-expanded={expandedLeaderboards[leaderboard.key]}
-                            className="flex w-full items-center justify-between gap-3 text-left"
-                        >
-                            <span>
-                                <span className="block text-xl font-semibold text-gray-900">{leaderboard.title}</span>
-                                <span className="mt-1 block text-sm text-gray-500">{leaderboard.playerCount} players · {leaderboard.totalValue} total</span>
-                            </span>
-                            <span className="text-xl text-gray-500" aria-hidden="true">{expandedLeaderboards[leaderboard.key] ? "−" : "+"}</span>
-                        </button>
-                        {expandedLeaderboards[leaderboard.key] && (
-                            <div className="mt-4 border-t border-gray-100 pt-4">
-                                {leaderboard.entries.length === 0 ? (
-                                    <p className="text-sm italic text-gray-500">No players with recorded stats.</p>
-                                ) : (
-                                    <ol className="space-y-3">
-                                        {leaderboard.entries.map((entry, index) => (
-                                            <li key={entry.playerId} className="flex items-center justify-between gap-3 border-b border-gray-100 pb-2 last:border-0 last:pb-0">
-                                                <span className="flex min-w-0 items-center gap-3">
-                                                    <span className="w-5 text-sm font-semibold text-gray-400">{index + 1}</span>
-                                                    <span className="truncate text-gray-800">{entry.playerName}</span>
-                                                </span>
-                                                <span className="shrink-0 font-bold text-salts-blue">{entry.value}</span>
-                                            </li>
-                                        ))}
-                                    </ol>
-                                )}
-                            </div>
-                        )}
-                    </section>
-                ))}
-            </section>
+            <LeaderboardStats
+                leaderboards={leaderboardStats}
+                expandedLeaderboards={expandedLeaderboards}
+                onToggle={toggleLeaderboard}
+            />
 
             <label className="mb-6 flex items-center gap-3 text-sm text-gray-700">
                 <input

@@ -35,6 +35,7 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
     const {
         gameTypeId: selectedGameTypeId,
         oppositionSearch,
+        oppositionInput,
         setGameTypeId: setSelectedGameTypeId,
         setOppositionSearch,
     } = useMatchFilters();
@@ -161,7 +162,7 @@ export default function MatchesView({ isActive = true }: MatchesViewProps) {
                             <input
                                 id="opposition-search"
                                 type="search"
-                                value={oppositionSearch}
+                                value={oppositionInput}
                                 onChange={(e) => setOppositionSearch(e.target.value)}
                                 placeholder="Search by opposition name"
                                 className="w-full px-3 py-2 border border-amber-200 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 hover:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-200"
