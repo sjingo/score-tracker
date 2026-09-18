@@ -32,7 +32,7 @@ export default function GameSaveSelect({
             value={selectedGame === gameId ? selectedPlayer || "" : ""}
             onChange={(event) => onChange(gameId, event.target.value)}
             aria-label={`Save player for game ${gameId}`}
-            className="basis-1/2 border p-2 rounded bg-white"
+            className="w-full rounded border p-2 text-sm sm:basis-1/2"
         >
             <option value="">Select player...</option>
             {activePlayers.map((player) => (

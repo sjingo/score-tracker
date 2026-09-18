@@ -3,6 +3,11 @@
 import { FormEvent, useState } from "react";
 import { useSession, authClient } from "@/lib/auth-client";
 import Link from "next/link";
+import PageContainer from "@/components/PageContainer";
+import PageHeader from "@/components/PageHeader";
+import SectionHeading from "@/components/SectionHeading";
+import Alert from "@/components/Alert";
+import Surface from "@/components/Surface";
 
 export default function AccountPage() {
     const { data: session } = useSession();
@@ -54,94 +59,96 @@ export default function AccountPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-8">
-            <div className="mx-auto max-w-xl rounded-lg bg-white p-6 shadow-lg sm:p-8">
-                <div className="mb-6 flex items-center justify-between">
-                    <Link href="/"
-                        className="text-blue-500 hover:text-blue-700"
-                    >
-                        &larr; back
-                    </Link>
-                </div>
-                <h1 className="text-2xl font-bold text-gray-900">My Account</h1>
-                <p className="mt-2 text-sm text-gray-600">
-                    Signed in as {session?.user.email}
-                </p>
-
-                <section className="mt-8 border-t border-salts-blue pt-6">
-                    <h2 className="text-lg font-semibold text-gray-900">Change password</h2>
-                    <p className="mt-1 text-sm text-gray-600">
-                        Use your current password to set a new one.
-                    </p>
-
-                    {error && (
-                        <div className="mt-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                            {error}
-                        </div>
-                    )}
-                    {message && (
-                        <div className="mt-4 rounded border border-green-200 bg-green-50 p-3 text-sm text-green-700">
-                            {message}
-                        </div>
-                    )}
-
-                    <form onSubmit={handlePasswordChange} className="mt-5 space-y-4">
-                        <div>
-                            <label htmlFor="current-password" className="mb-2 block text-sm font-medium text-gray-700">
-                                Current password
-                            </label>
-                            <input
-                                id="current-password"
-                                type="password"
-                                value={currentPassword}
-                                onChange={(event) => setCurrentPassword(event.target.value)}
-                                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-salts-blue"
-                                autoComplete="current-password"
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="new-password" className="mb-2 block text-sm font-medium text-gray-700">
-                                New password
-                            </label>
-                            <input
-                                id="new-password"
-                                type="password"
-                                value={newPassword}
-                                onChange={(event) => setNewPassword(event.target.value)}
-                                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-salts-blue"
-                                autoComplete="new-password"
-                                minLength={8}
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="confirm-password" className="mb-2 block text-sm font-medium text-gray-700">
-                                Confirm new password
-                            </label>
-                            <input
-                                id="confirm-password"
-                                type="password"
-                                value={confirmation}
-                                onChange={(event) => setConfirmation(event.target.value)}
-                                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-salts-blue"
-                                autoComplete="new-password"
-                                minLength={8}
-                                required
-                            />
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:bg-gray-400"
+            <PageContainer size="narrow">
+                <Surface className="p-5 sm:p-8">
+                    <div className="mb-6 flex items-center justify-between">
+                        <Link href="/"
+                            className="text-blue-500 hover:text-blue-700"
                         >
-                            {isLoading ? "Updating password..." : "Update password"}
-                        </button>
-                    </form>
-                </section>
-            </div>
+                            &larr; back
+                        </Link>
+                    </div>
+                    <PageHeader
+                        title="My Account"
+                        description={<>Signed in as {session?.user.email}</>}
+                    />
+
+                    <section className="mt-8 border-t border-salts-blue pt-6">
+                        <SectionHeading
+                            title="Change password"
+                            description="Use your current password to set a new one."
+                        />
+
+                        {error && (
+                            <Alert className="mt-4">
+                                {error}
+                            </Alert>
+                        )}
+                        {message && (
+                            <Alert tone="success" role="status" className="mt-4">
+                                {message}
+                            </Alert>
+                        )}
+
+                        <form onSubmit={handlePasswordChange} className="mt-5 space-y-4">
+                            <div>
+                                <label htmlFor="current-password" className="mb-2 block text-sm font-medium text-gray-700">
+                                    Current password
+                                </label>
+                                <input
+                                    id="current-password"
+                                    type="password"
+                                    value={currentPassword}
+                                    onChange={(event) => setCurrentPassword(event.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-salts-blue"
+                                    autoComplete="current-password"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="new-password" className="mb-2 block text-sm font-medium text-gray-700">
+                                    New password
+                                </label>
+                                <input
+                                    id="new-password"
+                                    type="password"
+                                    value={newPassword}
+                                    onChange={(event) => setNewPassword(event.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-salts-blue"
+                                    autoComplete="new-password"
+                                    minLength={8}
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="confirm-password" className="mb-2 block text-sm font-medium text-gray-700">
+                                    Confirm new password
+                                </label>
+                                <input
+                                    id="confirm-password"
+                                    type="password"
+                                    value={confirmation}
+                                    onChange={(event) => setConfirmation(event.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-salts-blue"
+                                    autoComplete="new-password"
+                                    minLength={8}
+                                    required
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:bg-gray-400"
+                            >
+                                {isLoading ? "Updating password..." : "Update password"}
+                            </button>
+                        </form>
+                    </section>
+                </Surface>
+            </PageContainer>
         </div>
     );
 }

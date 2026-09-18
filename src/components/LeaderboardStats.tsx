@@ -29,28 +29,28 @@ function LeaderboardCard({
     onToggle: () => void;
 }) {
     return (
-        <section className="rounded-lg bg-salts-blue p-5 text-white shadow">
+        <section className="rounded-lg bg-salts-blue p-4 text-white shadow sm:p-5">
             <button
                 type="button"
                 onClick={onToggle}
                 aria-expanded={isExpanded}
-                className="flex w-full items-center justify-between gap-3 text-left"
+                className="flex w-full items-center justify-between gap-2 text-left sm:gap-3"
             >
                 <span>
-                    <span className="block text-xl font-semibold text-amber-200">{leaderboard.title}</span>
+                    <span className="block text-lg font-semibold text-amber-200 sm:text-xl">{leaderboard.title}</span>
                     <span className="mt-1 block text-sm text-blue-100">{leaderboard.playerCount} players · {leaderboard.totalValue} total</span>
                 </span>
-                <span className="text-xl text-amber-200" aria-hidden="true">{isExpanded ? "−" : "+"}</span>
+                <span className="text-lg text-amber-200 sm:text-xl" aria-hidden="true">{isExpanded ? "−" : "+"}</span>
             </button>
             {isExpanded && (
-                <div className="mt-4 border-t border-blue-400 pt-4">
+                <div className="mt-3 border-t border-blue-400 pt-3 sm:mt-4 sm:pt-4">
                     {leaderboard.entries.length === 0 ? (
                         <p className="text-sm italic text-blue-100">No players with recorded stats.</p>
                     ) : (
-                        <ol className="space-y-3">
+                        <ol className="space-y-2 sm:space-y-3">
                             {leaderboard.entries.map((entry, index) => (
-                                <li key={entry.playerId} className="flex items-center justify-between gap-3 border-b border-blue-400 pb-2 last:border-0 last:pb-0">
-                                    <span className="flex min-w-0 items-center gap-3">
+                                <li key={entry.playerId} className="flex items-center justify-between gap-2 border-b border-blue-400 pb-1.5 last:border-0 last:pb-0 sm:gap-3 sm:pb-2">
+                                    <span className="flex min-w-0 items-center gap-2 sm:gap-3">
                                         <span className="w-5 text-sm font-semibold text-blue-200">{index + 1}</span>
                                         <span className="truncate text-white">{entry.playerName}</span>
                                     </span>
@@ -72,23 +72,23 @@ export default function LeaderboardStats({
 }: LeaderboardStatsProps) {
     return (
         <>
-            <section className="mb-6 rounded-lg bg-salts-blue p-6 text-white shadow">
-                <div className="mb-5">
-                    <h2 className="text-2xl font-bold text-white">Player stats</h2>
+            <section className="mb-4 rounded-lg bg-salts-blue p-4 text-white shadow sm:mb-6 sm:p-6">
+                <div className="mb-4 sm:mb-5">
+                    <h2 className="text-xl font-bold text-white sm:text-2xl">Player stats</h2>
                     <p className="mt-1 text-blue-100">Recorded player contributions across all games.</p>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
                     {leaderboards.map((leaderboard) => (
-                        <div key={leaderboard.key} className="border-l-4 border-amber-200 pl-4">
+                        <div key={leaderboard.key} className="border-l-4 border-amber-200 pl-3 sm:pl-4">
                             <p className="text-sm font-semibold uppercase tracking-wide text-amber-200">{leaderboard.summaryLabel}</p>
-                            <p className="mt-1 text-3xl font-bold text-white">{leaderboard.totalValue}</p>
+                            <p className="mt-1 text-2xl font-bold text-white sm:text-3xl">{leaderboard.totalValue}</p>
                             <p className="text-sm text-blue-100">across {leaderboard.playerCount} players</p>
                         </div>
                     ))}
                 </div>
             </section>
 
-            <section className="mb-6 grid gap-4 lg:grid-cols-3">
+            <section className="mb-4 grid gap-3 sm:mb-6 sm:gap-4 lg:grid-cols-3">
                 {leaderboards.map((leaderboard) => (
                     <LeaderboardCard
                         key={leaderboard.key}

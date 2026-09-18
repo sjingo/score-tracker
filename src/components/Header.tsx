@@ -16,22 +16,22 @@ export const Header = () => {
 
     return (
         <header className="bg-salts-blue  fixed inset-x-0 top-0 z-10 border-b border-gray-950/5 dark:border-white/10">
-            <div className="flex items-center justify-between flex-wrap pt-2 max-w-[1200px] m-auto relative">
+            <div className="relative mx-auto flex w-full max-w-[1200px] flex-wrap items-center justify-between px-2 pt-2 sm:px-4">
                 {/* Logo and Navigation */}
-                <div className="flex w-full px-2 gap-4">
+                <div className="flex w-full items-center gap-2 pr-10 sm:gap-4 sm:pr-12">
                     <Link
                         href="/"
                         aria-label="Home"
                         title="Home"
                         className="text-gray-600 transition-colors hover:text-blue-600 mr-auto"
                     >
-                        <HomeIcon className="size-6 stroke-amber-200 dark:stroke-white-500" />
+                        <HomeIcon className="size-5 stroke-amber-200 dark:stroke-white-500 sm:size-6" />
                     </Link>
-                    <h1 className=" text-lg font-bold text-amber-200 flex-1">
+                    <h1 className="min-w-0 flex-1 truncate text-base font-bold text-amber-200 sm:text-lg">
                         Lions Score Tracker</h1>
                 </div>
                 {/* User Info */}
-                <div className="flex px-2 gap-4 w-full min-h-[32px]">
+                <div className="flex min-h-[28px] w-full min-w-0 items-center gap-2 pr-10 sm:min-h-[32px] sm:gap-4 sm:pr-12">
                     {
                         session ?
                             <>
@@ -41,9 +41,9 @@ export const Header = () => {
                                     title="My account"
                                     className="text-gray-600 transition-colors hover:text-blue-600"
                                 >
-                                    <UserIcon className="size-6 stroke-amber-200 dark:stroke-white-500" />
+                                    <UserIcon className="size-5 stroke-amber-200 dark:stroke-white-500 sm:size-6" />
                                 </Link>
-                                <span className="text-sm text-amber-200">
+                                <span className="truncate text-xs text-amber-200 sm:text-sm">
                                     {session && session.user.email}
                                 </span>
 
@@ -56,9 +56,9 @@ export const Header = () => {
                         // window.location.href = "/";
                         redirect("/login");
                     }}
-                    className="cursor-pointer absolute right-0 text-md bg-amber-200 text-sky-600 text-bold hover:bg-amber-200 transition-colors p-2 h-full top-0"
+                    className="absolute right-0 top-0 h-full cursor-pointer bg-amber-200 p-2 text-sky-600 transition-colors hover:bg-amber-200 sm:px-3"
                 >
-                    <LogoutIcon className="size-6 stroke-sky-600 dark:stroke-white-500 " />
+                    <LogoutIcon className="size-5 stroke-sky-600 dark:stroke-white-500 sm:size-6" />
                 </button>
             </div>
         </header >

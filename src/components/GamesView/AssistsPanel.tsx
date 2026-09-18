@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Game, Player } from "../types";
 import { PlusIcon } from "@/icons/plus";
 import { MinusIcon } from "@/icons/minus";
+import Alert from "@/components/Alert";
 
 type AssistPlayer = Pick<Player, "id" | "name"> & {
     jersey_number: number | string;
@@ -34,8 +35,8 @@ export default function AssistsPanel({
     return (
         <>
             <div className="mb-4">
-                <div className="flex justify-between items-center mb-2">
-                    <h4 className="font-semibold">Assists:</h4>
+                <div className="mb-2 flex items-center justify-between">
+                    <h4 className="text-sm font-semibold sm:text-base">Assists:</h4>
                     <button
                         type="button"
                         aria-expanded={isExpanded}
@@ -53,7 +54,7 @@ export default function AssistsPanel({
                                 {assists.map((assist) => (
                                     <div
                                         key={assist.id}
-                                        className="flex justify-between items-center bg-purple-100 p-3 rounded"
+                                        className="flex flex-col gap-2 rounded bg-purple-100 p-2 sm:flex-row sm:items-center sm:justify-between sm:p-3"
                                     >
                                         <span>
                                             {assist.player_name}{" "}
@@ -62,18 +63,18 @@ export default function AssistsPanel({
                                                     ({assist.anonymised_id})
                                                 </span>
                                             )}
-                                            <span className="ml-2 font-bold bg-purple-500 text-white px-3 py-1 rounded">
+                                            <span className="ml-2 rounded bg-purple-500 px-2 py-1 font-bold text-white sm:px-3">
                                                 {assist.assist_count}
                                             </span>
                                         </span>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 self-end sm:self-auto">
                                             <button
                                                 type="button"
                                                 aria-label={`Add assist for ${assist.player_name}`}
                                                 onClick={() => onRecordAssist(game.id, 1, assist.player_id)}
                                                 className="text-purple-600 hover:text-purple-800"
                                             >
-                                                <PlusIcon className="w-8 h-8" />
+                                                <PlusIcon className="size-7 sm:size-8" />
                                             </button>
                                             <button
                                                 type="button"
@@ -81,7 +82,7 @@ export default function AssistsPanel({
                                                 onClick={() => onRecordAssist(game.id, -1, assist.player_id)}
                                                 className="text-red-600 hover:text-red-800"
                                             >
-                                                <MinusIcon className="w-8 h-8" />
+                                                <MinusIcon className="size-7 sm:size-8" />
                                             </button>
                                             <button
                                                 type="button"
@@ -101,18 +102,18 @@ export default function AssistsPanel({
                 </div>
             </div>
 
-            <div className="bg-purple-50 p-2 rounded">
-                <h4 className="font-semibold mb-3">🎯 Record Assist:</h4>
+            <div className="rounded bg-purple-50 p-2 sm:p-3">
+                <h4 className="mb-3 text-sm font-semibold sm:text-base">🎯 Record Assist:</h4>
                 {assistError && (
-                    <div className="bg-red-100 text-red-700 p-2 rounded mb-2 text-sm">
+                    <Alert className="mb-2 rounded border-red-200 bg-red-100 p-2">
                         {assistError}
-                    </div>
+                    </Alert>
                 )}
                 <div className="flex gap-2">
                     <select
                         value={selectedGame === game.id ? selectedPlayer || "" : ""}
                         onChange={(event) => onSelectPlayer(game.id, event.target.value)}
-                        className="basis-1/2 border p-2 rounded bg-white"
+                        className="w-full rounded border p-2 text-sm sm:basis-1/2"
                     >
                         <option value="">Select player...</option>
                         {activePlayers.filter((player) => !assists.some((assist) => assist.player_id === player.id)).map((player) => (

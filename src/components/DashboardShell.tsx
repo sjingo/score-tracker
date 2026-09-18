@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, type MouseEvent, type ReactNode } from "react";
 import { DASHBOARD_ROUTES, type DashboardTab } from "@/lib/dashboard";
 import type { AuthRole } from "@/lib/auth";
+import PageContainer from "@/components/PageContainer";
 
 const ADMIN_TABS: Array<[DashboardTab, string]> = [
     ["games", "⚽ Games"],
@@ -66,7 +67,7 @@ export default function DashboardShell({
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
             <nav className="border-b bg-white" aria-label="Dashboard navigation">
-                <div className="mx-auto max-w-6xl px-4">
+                <PageContainer flush>
                     <div className="flex min-w-0 gap-4 overflow-x-auto">
                         {tabs.map(([tab, label]) => (
                             <Link
@@ -74,7 +75,7 @@ export default function DashboardShell({
                                 href={DASHBOARD_ROUTES[tab]}
                                 onClick={(event) => handleTabChange(event, tab)}
                                 aria-current={activeTab === tab ? "page" : undefined}
-                                className={`shrink-0 border-b-2 px-4 py-3 font-semibold transition ${activeTab === tab
+                                className={`shrink-0 border-b-2 px-3 py-2.5 text-sm font-semibold transition sm:px-4 sm:py-3 sm:text-base ${activeTab === tab
                                     ? "border-salts-blue text-blue-600"
                                     : "border-transparent text-gray-600 hover:text-gray-900"
                                     }`}
@@ -83,31 +84,31 @@ export default function DashboardShell({
                             </Link>
                         ))}
                     </div>
-                </div>
+                </PageContainer>
             </nav>
 
-            <div className="py-6">{children}</div>
+            <div>{children}</div>
 
             {showConfirm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="mx-4 max-w-sm rounded-lg bg-white p-6 shadow-lg">
+                    <div className="mx-3 w-full max-w-sm rounded-lg bg-white p-4 shadow-lg sm:mx-4 sm:p-6">
                         <h2 className="mb-3 text-lg font-semibold text-gray-900">Game in Progress</h2>
-                        <p className="mb-6 text-gray-600">
+                        <p className="mb-6 text-sm text-gray-600 sm:text-base">
                             You have a game in progress. Navigating away may lose unsaved data. Are you sure you want to continue?
                         </p>
-                        <div className="flex justify-end gap-3">
+                        <div className="flex flex-wrap justify-end gap-2 sm:gap-3">
                             <button
                                 onClick={() => {
                                     setShowConfirm(false);
                                     setPendingTab(null);
                                 }}
-                                className="rounded border border-gray-300 px-4 py-2 font-medium text-gray-700 hover:bg-gray-50"
+                                className="rounded border border-gray-300 px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-50 sm:px-4 sm:py-2"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleConfirmNavigation}
-                                className="rounded bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700"
+                                className="rounded bg-red-600 px-3 py-1.5 font-medium text-white hover:bg-red-700 sm:px-4 sm:py-2"
                             >
                                 Leave Game
                             </button>

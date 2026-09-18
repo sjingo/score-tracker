@@ -23,6 +23,11 @@ import GameTypeSelect from "./GameTypeSelect";
 import LocationSelect from "./LocationSelect";
 import ShotsPanel from "./ShotsPanel";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import PageContainer from "@/components/PageContainer";
+import PageHeader from "@/components/PageHeader";
+import SectionHeading from "@/components/SectionHeading";
+import Alert from "@/components/Alert";
+import Surface from "@/components/Surface";
 
 
 interface GamesViewProps {
@@ -550,33 +555,32 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
     if (loading) return <LoadingSpinner label="Loading games..." />;
 
     return (
-        <div className="max-w-6xl mx-auto p-1">
-            <h2 className="text-xl font-bold mb-1">Lions Games</h2>
-            <p className="text-gray-600 mb-6">
-                Total: {games.length} | In Progress: {activeGames.length} | Completed:{" "}
-                {completedGames.length}
-            </p>
+        <PageContainer>
+            <PageHeader
+                title="Lions Games"
+                description={<>Total: {games.length} | In Progress: {activeGames.length} | Completed: {completedGames.length}</>}
+            />
 
             {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <Alert className="mb-4 rounded border-red-400 bg-red-100 p-3 text-red-700 sm:p-4">
                     {error}
-                </div>
+                </Alert>
             )}
 
             {/* Create New Game Toggle Button */}
             <button
                 onClick={() => setShowCreatePanel(!showCreatePanel)}
-                className="mb-6 bg-salts-blue text-amber-200 px-6 py-2 rounded hover:bg-blue-700 font-semibold"
+                className="mb-4 inline-flex items-center rounded bg-salts-blue px-4 py-1.5 font-semibold text-amber-200 hover:bg-blue-700 sm:mb-6 sm:px-6 sm:py-2"
             >
                 {showCreatePanel ? (<><CloseIcon className="size-6 stroke-3" /> </>) : "New Game"}
             </button>
 
             {/* New Game Form Panel */}
             {showCreatePanel && (
-                <div className="bg-white p-4 rounded-lg shadow-md mb-6 border-l-4 border-salts-blue">
-                    <h2 className="text-2xl font-bold mb-4">New Game</h2>
+                <Surface className="mb-4 border-l-4 border-salts-blue p-4 sm:mb-6">
+                    <SectionHeading title="New Game" />
                     <form onSubmit={handleCreateGame} className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
                             <div className="space-y-2">
                                 <select
                                     value={addingTeam ? "__add_new__" : newGame.oppositionTeamId}
@@ -595,7 +599,7 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
                                     }}
                                     required
                                     disabled={teamsLoading}
-                                    className={`border p-3 rounded w-full ${teamsLoading ? "bg-gray-200 text-gray-500 cursor-not-allowed" : "bg-gray-50"
+                                    className={`w-full rounded border px-3 py-2 text-sm sm:p-3 ${teamsLoading ? "cursor-not-allowed bg-gray-200 text-gray-500" : "bg-gray-50"
                                         }`}
                                 >
                                     <option value="">{teamsLoading ? "Loading teams..." : "Select Opposition Team (required)"}</option>
@@ -613,13 +617,13 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
                                             placeholder="New team name"
                                             value={newTeamName}
                                             onChange={(e) => setNewTeamName(e.target.value)}
-                                            className="border p-3 rounded bg-gray-50 flex-1"
+                                            className="min-w-0 flex-1 rounded border p-2 text-sm sm:p-3"
                                             autoFocus
                                         />
                                         <button
                                             type="button"
                                             onClick={handleAddTeam}
-                                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 font-semibold"
+                                            className="rounded bg-blue-600 px-3 py-1.5 font-semibold text-white hover:bg-blue-700 sm:px-4 sm:py-2"
                                         >
                                             Add
                                         </button>
@@ -633,7 +637,7 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
                                 }
                                 required
                                 disabled={typesLoading}
-                                className={`border p-3 rounded ${typesLoading ? "bg-gray-200 text-gray-500 cursor-not-allowed" : "bg-gray-50"
+                                className={`rounded border px-3 py-2 text-sm sm:p-3 ${typesLoading ? "cursor-not-allowed bg-gray-200 text-gray-500" : "bg-gray-50"
                                     }`}
                             >
                                 <option value="">{typesLoading ? "Loading game types..." : "Select Game Type (required)"}</option>
@@ -648,14 +652,14 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
                                 placeholder="Venue (optional)"
                                 value={newGame.venue}
                                 onChange={(e) => setNewGame({ ...newGame, venue: e.target.value })}
-                                className="border p-3 rounded bg-gray-50"
+                                className="rounded border p-2 text-sm sm:p-3"
                             />
                             <select
                                 value={newGame.location}
                                 onChange={(e) =>
                                     setNewGame({ ...newGame, location: e.target.value })
                                 }
-                                className="border p-3 rounded bg-gray-50"
+                                className="rounded border p-2 text-sm sm:p-3"
                             >
                                 <option value="">Select Location (optional)</option>
                                 <option value="home">Home</option>
@@ -666,44 +670,44 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
                             placeholder="Notes (optional)"
                             value={newGame.notes}
                             onChange={(e) => setNewGame({ ...newGame, notes: e.target.value })}
-                            className="border p-3 rounded w-full bg-gray-50"
+                            className="w-full rounded border p-2 text-sm sm:p-3"
                             rows={2}
                         />
                         <button
                             type="submit"
-                            className="bg-salts-blue text-white px-6 py-2 rounded hover:bg-green-700 font-semibold"
+                            className="rounded bg-salts-blue px-4 py-1.5 font-semibold text-white hover:bg-green-700 sm:px-6 sm:py-2"
                         >
                             Create Game
                         </button>
                     </form>
-                </div>
+                </Surface>
             )}
 
             {/* In Progress Games */}
             {activeGames.length > 0 && (
                 <div className="mb-8">
-                    <h2 className="text-2xl font-bold mb-4">🔴 In Progress ({activeGames.length})</h2>
+                    <SectionHeading title={`🔴 In Progress (${activeGames.length})`} />
                     <div className="space-y-4">
                         {activeGames.map((game) => (
-                            <div
+                            <Surface
                                 key={game.id}
-                                className="bg-white p-4 rounded-lg shadow-md border-l-4 border-yellow-500"
+                                className="border-l-4 border-yellow-500 p-3 sm:p-4"
                             >
                                 {/* Game Header */}
-                                <div className="flex justify-between items-start mb-4">
+                                <div className="flex items-start justify-between gap-3 mb-3 sm:mb-4">
                                     <div>
-                                        <h3 className="text-md font-bold">
+                                        <h3 className="text-base font-bold sm:text-md">
                                             Lions vs {game.opposition_name}
                                         </h3>
                                     </div>
                                     <button
                                         onClick={() => handleUpdateGameStatus(game.id, "completed")}
-                                        className="bg-salts-blue text-white px-3 py-1 rounded hover:bg-blue-600 text-xs font-semibold"
+                                        className="shrink-0 rounded bg-salts-blue px-2.5 py-1 text-xs font-semibold text-white hover:bg-blue-600 sm:px-3"
                                     >
                                         Complete
                                     </button>
                                 </div>
-                                <div className="flex justify-between items-start mb-4">
+                                <div className="mb-3 flex items-start justify-between sm:mb-4">
                                     {/* Game Metadata */}
                                     <div className="game-meta-row text-sm text-gray-600 flex items-center gap-2 mt-1">
                                         <GameDatePicker
@@ -748,9 +752,9 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
                                     </div>
                                 </div>
                                 {/* Score Display */}
-                                <div className="bg-blue-50 p-2 rounded mb-4 border-2 border-blue-200">
+                                <div className="mb-3 rounded border-2 border-blue-200 bg-blue-50 p-2 sm:mb-4">
                                     <div className="text-center">
-                                        <div className="text-4xl font-bold text-blue-900">
+                                        <div className="text-3xl font-bold text-blue-900 sm:text-4xl">
                                             {game.score_for} - {game.score_against}
                                         </div>
                                         <div className="text-sm text-blue-600 mt-1">Goals For - Against</div>
@@ -812,7 +816,7 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
                                 />
 
                                 {/* Delete Game Button */}
-                                <div className="mt-4 flex justify-end" >
+                                <div className="mt-3 flex justify-end sm:mt-4" >
                                     <button
                                         onClick={() => handleDeleteGame(game.id)}
                                         className="text-red-600 hover:text-red-900 text-sm underline"
@@ -820,7 +824,7 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
                                         Delete Game
                                     </button>
                                 </div>
-                            </div>
+                            </Surface>
                         ))}
                     </div>
                 </div >
@@ -831,14 +835,14 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
             {
                 completedGames.length > 0 && (
                     <div className="mb-8">
-                        <h2 className="text-2xl font-bold mb-4">✅ Completed ({completedGames.length})</h2>
+                        <SectionHeading title={`✅ Completed (${completedGames.length})`} />
                         <div className="space-y-3">
                             {completedGames.map((game) => (
                                 <div
                                     key={game.id}
-                                    className="bg-gray-100 p-2 rounded-lg shadow border-l-4 border-gray-500"
+                                    className="rounded-lg border-l-4 border-gray-500 bg-gray-100 p-3 shadow sm:p-4"
                                 >
-                                    <div className="flex justify-between items-center">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
                                         <div>
                                             <h3 className="font-semibold">
                                                 Lions vs {game.opposition_name}
@@ -847,7 +851,7 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
                                                 {new Date(game.match_date).toLocaleDateString()} • {game.game_type_display}
                                             </p>
                                         </div>
-                                        <div className="text-2xl font-bold">{game.score_for} - {game.score_against}</div>
+                                        <div className="text-xl font-bold sm:text-2xl">{game.score_for} - {game.score_against}</div>
                                         <button
                                             onClick={() => handleUpdateGameStatus(game.id, "in-progress")}
                                             className="text-blue-600 hover:text-blue-900 text-sm"
@@ -870,11 +874,11 @@ export default function GamesView({ onInProgressGameChange }: GamesViewProps) {
 
             {
                 games.length === 0 && (
-                    <div className="bg-gray-100 p-6 rounded-lg text-center text-gray-600">
-                        <p className="text-lg">No games yet. Create one above to get started!</p>
+                    <div className="rounded-lg bg-gray-100 p-4 text-center text-gray-600 sm:p-6">
+                        <p className="text-base sm:text-lg">No games yet. Create one above to get started!</p>
                     </div>
                 )
             }
-        </div >
+        </PageContainer>
     );
 }
