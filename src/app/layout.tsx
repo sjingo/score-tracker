@@ -53,7 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <QueryProvider>
 
           <Header />
-          <main className="mt-[80px] flex flex-1 flex-col">
+          <main className="app-main flex flex-1 flex-col">
             {children}
           </main>
         </QueryProvider>

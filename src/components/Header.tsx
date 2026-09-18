@@ -15,7 +15,7 @@ export const Header = () => {
 
 
     return (
-        <header className="bg-salts-blue  fixed inset-x-0 top-0 z-10 border-b border-gray-950/5 dark:border-white/10">
+        <header className="app-header bg-salts-blue fixed inset-x-0 top-0 z-10 border-b border-gray-950/5 dark:border-white/10">
             <div className="relative mx-auto flex w-full max-w-[1200px] flex-wrap items-center justify-between px-2 pt-2 sm:px-4">
                 {/* Logo and Navigation */}
                 <div className="flex w-full items-center gap-2 pr-10 sm:gap-4 sm:pr-12">
