@@ -29,7 +29,7 @@ CREATE TABLE session (
 CREATE TABLE account (
   id TEXT PRIMARY KEY,
   accountId TEXT NOT NULL,
-  issuer TEXT NOT NULL,
+  issuer TEXT,
   providerId TEXT NOT NULL,
   userId TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
   accessToken TEXT,
