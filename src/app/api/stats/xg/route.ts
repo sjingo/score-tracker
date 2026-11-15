@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
     const result = await db().execute(`
       SELECT
         g.id AS game_id,
+        g.game_type_id,
         g.opposition_name,
         g.match_date,
         g.status,
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
       FROM games g
       LEFT JOIN game_shots gs ON gs.game_id = g.id
       WHERE g.team_id = (SELECT id FROM teams WHERE team_name = 'Lions' LIMIT 1)
-      GROUP BY g.id, g.opposition_name, g.match_date, g.status, g.score_for, gs.shot_type
+      GROUP BY g.id, g.game_type_id, g.opposition_name, g.match_date, g.status, g.score_for, gs.shot_type
       ORDER BY g.match_date DESC
     `);
 
@@ -35,6 +36,7 @@ export async function GET(request: NextRequest) {
       string,
       {
         gameId: string;
+        gameTypeId: string;
         oppositionName: string;
         matchDate: string;
         status: string;
@@ -55,6 +57,7 @@ export async function GET(request: NextRequest) {
       const gameId = String(row.game_id);
       const existing = games.get(gameId) ?? {
         gameId,
+        gameTypeId: String(row.game_type_id),
         oppositionName: String(row.opposition_name),
         matchDate: String(row.match_date),
         status: String(row.status),

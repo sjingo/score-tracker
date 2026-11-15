@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useXgStatsQuery } from "@/app/api/stats/useXgStatsQuery";
 import { useGamesQuery } from "@/app/api/games/hooks/useGamesQuery";
+import { useGameTypesQuery } from "@/app/api/game-types/hooks/useGameTypesQuery";
 import SyncButton from "@/components/SyncButton";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import LeaderboardStats, { LeaderboardEntry } from "@/components/LeaderboardStats";
@@ -49,6 +50,7 @@ function aggregateLeaderboard(
 
 export default function StatsView() {
     const queryClient = useQueryClient();
+    const [selectedGameTypeId, setSelectedGameTypeId] = useState("");
     const [showOnlyGamesWithShots, setShowOnlyGamesWithShots] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
     const {
@@ -63,6 +65,11 @@ export default function StatsView() {
         isError: isPlayerStatsError,
         error: playerStatsQueryError,
     } = useGamesQuery();
+    const {
+        data: gameTypes = [],
+        isLoading: isLoadingGameTypes,
+        error: gameTypesQueryError,
+    } = useGameTypesQuery();
 
     const handleSync = async () => {
         setIsSyncing(true);
@@ -70,18 +77,27 @@ export default function StatsView() {
             await Promise.all([
                 queryClient.invalidateQueries({ queryKey: ["stats", "xg"] }),
                 queryClient.invalidateQueries({ queryKey: ["games"] }),
+                queryClient.invalidateQueries({ queryKey: ["gameTypes"] }),
             ]);
         } finally {
             setIsSyncing(false);
         }
     };
-    const visibleGames = showOnlyGamesWithShots
-        ? games.filter((game) => game.totalShots > 0)
+    const filteredGames = selectedGameTypeId
+        ? games.filter((game) => game.gameTypeId === selectedGameTypeId)
         : games;
-    const gamesWithShots = games.filter((game) => game.totalShots > 0);
+    const filteredGamesWithPlayerStats = selectedGameTypeId
+        ? gamesWithPlayerStats.filter((game) => game.game_type_id === selectedGameTypeId)
+        : gamesWithPlayerStats;
+    const visibleGames = showOnlyGamesWithShots
+        ? filteredGames.filter((game) => game.totalShots > 0)
+        : filteredGames;
+    const gamesWithShots = filteredGames.filter((game) => game.totalShots > 0);
     const totalXg = gamesWithShots.reduce((sum, game) => sum + game.totalXg, 0);
     const actualGoals = gamesWithShots.reduce((sum, game) => sum + game.actualGoals, 0);
     const totalShots = gamesWithShots.reduce((sum, game) => sum + game.totalShots, 0);
+    const totalGoals = filteredGames.reduce((sum, game) => sum + game.actualGoals, 0);
+    const averageGoals = filteredGames.length > 0 ? totalGoals / filteredGames.length : 0;
     const averageXg = gamesWithShots.length > 0 ? totalXg / gamesWithShots.length : 0;
     const averageShots = gamesWithShots.length > 0 ? totalShots / gamesWithShots.length : 0;
     const leaderboardStats = [
@@ -90,7 +106,7 @@ export default function StatsView() {
             title: "Scorers leaderboard",
             summaryLabel: "Goals",
             entries: aggregateLeaderboard(
-                gamesWithPlayerStats.flatMap((game) => game.scorers ?? []),
+                filteredGamesWithPlayerStats.flatMap((game) => game.scorers ?? []),
                 (entry) => entry.goal_count,
             ),
         },
@@ -99,7 +115,7 @@ export default function StatsView() {
             title: "Assists leaderboard",
             summaryLabel: "Assists",
             entries: aggregateLeaderboard(
-                gamesWithPlayerStats.flatMap((game) => game.assists ?? []),
+                filteredGamesWithPlayerStats.flatMap((game) => game.assists ?? []),
                 (entry) => entry.assist_count,
             ),
         },
@@ -108,7 +124,7 @@ export default function StatsView() {
             title: "Saves leaderboard",
             summaryLabel: "Saves",
             entries: aggregateLeaderboard(
-                gamesWithPlayerStats.flatMap((game) => game.saves ?? []),
+                filteredGamesWithPlayerStats.flatMap((game) => game.saves ?? []),
                 (entry) => entry.save_count,
             ),
         },
@@ -118,13 +134,13 @@ export default function StatsView() {
         playerCount: leaderboard.entries.length,
     }));
 
-    if (isLoading || isLoadingPlayerStats) {
+    if (isLoading || isLoadingPlayerStats || isLoadingGameTypes) {
         return <LoadingSpinner label="Loading stats..." className="mx-auto max-w-6xl" />;
     }
 
     const hasFatalError = (isError && games.length === 0)
         || (isPlayerStatsError && gamesWithPlayerStats.length === 0);
-    const refreshError = xgQueryError?.message || playerStatsQueryError?.message;
+    const refreshError = xgQueryError?.message || playerStatsQueryError?.message || gameTypesQueryError?.message;
 
     if (hasFatalError) {
         return <PageContainer className="text-red-700">Failed to load xG stats.</PageContainer>;
@@ -146,11 +162,45 @@ export default function StatsView() {
                 }
                 actions={<SyncButton
                     onClick={handleSync}
-                    disabled={isSyncing || isLoading}
+                    disabled={isSyncing || isLoading || isLoadingPlayerStats || isLoadingGameTypes}
                     title="Refresh stats from server"
                     isSyncing={isSyncing}
                 />}
             />
+
+            <Surface variant="panel" className="mb-4 p-3 sm:mb-6 sm:p-4">
+                <div>
+                    <label htmlFor="stats-game-type" className="mb-2 block text-sm font-medium text-white">
+                        Filter by Type
+                    </label>
+                    <select
+                        id="stats-game-type"
+                        value={selectedGameTypeId}
+                        onChange={(event) => setSelectedGameTypeId(event.target.value)}
+                        className="w-full rounded-lg border border-amber-200 px-2.5 py-1.5 text-gray-900 hover:border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-200 sm:px-3 sm:py-2"
+                    >
+                        <option value="">All Types</option>
+                        {gameTypes.map((type) => (
+                            <option key={type.id} value={type.id}>
+                                {type.display_name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            </Surface>
+
+            <Surface variant="panel" className="mb-4 p-4 sm:mb-6 sm:p-6">
+                <h2 className="text-xl font-bold text-white sm:text-2xl">Average goals per game</h2>
+                <div className="flex flex-wrap items-end justify-between gap-4 sm:gap-6">
+                    <div className="text-right">
+                        <p className="p-2 text-4xl font-bold tracking-tight text-amber-200 sm:text-5xl">{averageGoals.toFixed(2)}</p>
+                    </div>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-t border-blue-400 pt-3 text-sm text-white sm:mt-5 sm:gap-x-8 sm:pt-4">
+                    <span>{filteredGames.length} games</span>
+                    <span>{totalGoals} goals</span>
+                </div>
+            </Surface>
 
             <Surface variant="panel" className="mb-4 p-4 sm:mb-6 sm:p-6">
                 <h2 className="text-xl font-bold text-white sm:text-2xl">Average xG per game</h2>

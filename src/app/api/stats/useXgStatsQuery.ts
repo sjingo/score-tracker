@@ -12,6 +12,7 @@ export interface XgBreakdown {
 
 export interface XgGameStats {
   gameId: string;
+  gameTypeId: string;
   oppositionName: string;
   matchDate: string;
   status: string;
