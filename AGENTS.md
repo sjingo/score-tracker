@@ -10,6 +10,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ---
 
+# Repository Scope
+
+This repository is the Lions Score Tracker application. It does not use Wix, and Wix MCP tools or services are not required for work in this repository.
+
 # Lions Score Tracker - Domain & Features
 
 ## Project Summary
