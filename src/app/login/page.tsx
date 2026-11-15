@@ -40,7 +40,7 @@ export default function LoginPage() {
             }
 
             await refetchSession();
-            router.replace("/");
+            router.replace("/matches");
         } catch (err) {
             if (err instanceof DOMException && err.name === "AbortError") {
                 setError("Sign-in timed out. Please check your connection and try again.");

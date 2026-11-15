@@ -8,6 +8,10 @@ import { LibsqlDialect } from "@libsql/kysely-libsql";
 
 const TURSO_DATABASE_URL = process.env.TURSO_DATABASE_URL;
 const TURSO_AUTH_TOKEN = process.env.TURSO_AUTH_TOKEN;
+const isProduction = process.env.NODE_ENV === "production";
+const baseURL = isProduction
+  ? process.env.BETTER_AUTH_URL
+  : "http://localhost:3000";
 
 if (!TURSO_DATABASE_URL || !TURSO_AUTH_TOKEN) {
   throw new Error("TURSO_DATABASE_URL and TURSO_AUTH_TOKEN must be set");
@@ -27,7 +31,10 @@ export const auth = betterAuth({
     casing: "snake",
   },
   secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  baseURL,
+  trustedOrigins: isProduction
+    ? undefined
+    : ["http://localhost:3000", "http://127.0.0.1:3000"],
   emailAndPassword: {
     enabled: true,
     disableSignUp: true,
